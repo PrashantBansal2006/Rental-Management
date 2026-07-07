@@ -10,7 +10,9 @@ const Wishlist = () => {
 
   const fetchWishlist = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/user/wishlist");
+      const response = await fetch("http://localhost:5000/api/user/wishlist", {
+        credentials: 'include'
+      });
       const data = await response.json();
       if (data.success) {
         // Assume backend returns populated products inside data.wishlist
@@ -33,7 +35,8 @@ const Wishlist = () => {
       const response = await fetch("http://localhost:5000/api/user/wishlist", {
         method: "POST", // toggle endpoint
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId })
+        body: JSON.stringify({ productId }),
+        credentials: 'include'
       });
       const data = await response.json();
       if (data.success) {

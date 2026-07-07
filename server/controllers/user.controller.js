@@ -4,7 +4,7 @@ import User from "../models/user.model.js";
 export const toggleWishlist = async (req, res) => {
   try {
     const { productId } = req.body;
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.userId);
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
@@ -31,7 +31,7 @@ export const toggleWishlist = async (req, res) => {
 export const addToCart = async (req, res) => {
   try {
     const { productId, quantity, duration, durationType, totalPrice } = req.body;
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.userId);
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
@@ -55,7 +55,7 @@ export const addToCart = async (req, res) => {
 // Get Wishlist
 export const getWishlist = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate('wishlist');
+    const user = await User.findById(req.userId).populate('wishlist');
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
     
     return res.status(200).json({ success: true, wishlist: user.wishlist });
@@ -67,7 +67,7 @@ export const getWishlist = async (req, res) => {
 // Get Cart
 export const getCart = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate('cart.product');
+    const user = await User.findById(req.userId).populate('cart.product');
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
     
     return res.status(200).json({ success: true, cart: user.cart });
@@ -80,7 +80,7 @@ export const getCart = async (req, res) => {
 export const removeFromCart = async (req, res) => {
   try {
     const { cartItemId } = req.params;
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.userId);
     
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
@@ -88,7 +88,7 @@ export const removeFromCart = async (req, res) => {
     await user.save();
 
     // Re-populate to send back updated cart
-    const updatedUser = await User.findById(req.user._id).populate('cart.product');
+    const updatedUser = await User.findById(req.userId).populate('cart.product');
     return res.status(200).json({ success: true, message: "Item removed", cart: updatedUser.cart });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error removing from cart", error: error.message });

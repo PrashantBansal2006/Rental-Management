@@ -42,15 +42,7 @@ async function register(req, res) {
             maxAge: 7*24*60*60*1000 // 7 days
         });
 
-        // Sending Welcome Email
-        const mailOptions = {
-            from: process.env.SENDER_EMAIL,
-            to: newUser.email,
-            subject: 'Welcome to Our App',
-            text: `Hello ${newUser.name},\n\nWelcome to our app! We're excited to have you on board.\n\nBest regards,\nThe Team`
-        };
-
-        await transporter.sendMail(mailOptions);
+        // Email verification will be handled separately via sendVerifyOTP
 
         res.status(201).json({
             success: true,
@@ -60,7 +52,8 @@ async function register(req, res) {
                 newUser.email,
                 newUser.phone,
                 newUser.role,
-                newUser.address
+                newUser.address,
+                newUser.isAccountVerified
             ],
             token : token
         });
@@ -86,14 +79,14 @@ async function login(req, res) {
         if (!user) {
             return res.status(400).json({
                 success: false,
-                message: "User not found"
+                message: "Wrong credentials"
             });
         }
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid password"
+                message: "Wrong credentials"
             });
         }
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -112,7 +105,8 @@ async function login(req, res) {
                 user.email,
                 user.phone,
                 user.role,
-                user.address
+                user.address,
+                user.isAccountVerified
             ]
         }); 
     }

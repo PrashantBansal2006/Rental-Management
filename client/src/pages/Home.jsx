@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { Search, ChevronDown, LayoutGrid, List, Package, Heart, Loader2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import './Home.css';
 
 const Home = () => {
@@ -9,6 +10,9 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [priceRange, setPriceRange] = useState("");
   const [priceType, setPriceType] = useState("daily");
+  
+  const { user } = useAuth();
+  const navigate = useNavigate();
   
   // New States for top filter bar
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,6 +43,10 @@ const Home = () => {
 
   const handleAddToCart = async (e, product) => {
     e.preventDefault();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     try {
       const response = await fetch("http://localhost:5000/api/user/cart", {
         method: "POST",
@@ -49,7 +57,8 @@ const Home = () => {
           duration: 1,
           durationType: priceType,
           totalPrice: product.pricing?.[priceType] || 0
-        })
+        }),
+        credentials: 'include'
       });
       const data = await response.json();
       if (data.success) {
@@ -65,11 +74,16 @@ const Home = () => {
 
   const handleWishlist = async (e, product) => {
     e.preventDefault();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     try {
       const response = await fetch("http://localhost:5000/api/user/wishlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product._id })
+        body: JSON.stringify({ productId: product._id }),
+        credentials: 'include'
       });
       const data = await response.json();
       if (data.success) {
@@ -81,9 +95,13 @@ const Home = () => {
   };
 
   useEffect(() => {
+    if (!user) return;
+    
     const fetchWishlist = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/user/wishlist");
+        const response = await fetch("http://localhost:5000/api/user/wishlist", {
+          credentials: 'include'
+        });
         const data = await response.json();
         if (data.success) {
           setWishlistIds(data.wishlist.map(p => p._id));

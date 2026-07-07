@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import { Package, ArrowLeft, Heart, Loader2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import './ProductDetail.css';
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -24,6 +27,10 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     try {
       const response = await fetch("http://localhost:5000/api/user/cart", {
         method: "POST",
@@ -34,7 +41,8 @@ const ProductDetail = () => {
           duration: rentalDuration,
           durationType: rentalType,
           totalPrice: calculateTotal()
-        })
+        }),
+        credentials: 'include'
       });
       const data = await response.json();
       if (data.success) {
@@ -47,11 +55,16 @@ const ProductDetail = () => {
   };
 
   const handleWishlist = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     try {
       const response = await fetch("http://localhost:5000/api/user/wishlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product._id })
+        body: JSON.stringify({ productId: product._id }),
+        credentials: 'include'
       });
       const data = await response.json();
       if (data.success) {
@@ -63,9 +76,13 @@ const ProductDetail = () => {
   };
 
   useEffect(() => {
+    if (!user) return;
+
     const fetchWishlist = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/user/wishlist");
+        const response = await fetch("http://localhost:5000/api/user/wishlist", {
+          credentials: 'include'
+        });
         const data = await response.json();
         if (data.success) {
           setIsWishlisted(data.wishlist.some(p => p._id === id || p === id)); // handles both populated and unpopulated

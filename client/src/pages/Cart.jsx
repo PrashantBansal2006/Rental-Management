@@ -10,7 +10,9 @@ const Cart = () => {
 
   const fetchCart = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/user/cart");
+      const response = await fetch("http://localhost:5000/api/user/cart", {
+        credentials: 'include'
+      });
       const data = await response.json();
       if (data.success) {
         setCartItems(data.cart);
@@ -29,7 +31,8 @@ const Cart = () => {
   const handleRemove = async (cartItemId) => {
     try {
       const response = await fetch(`http://localhost:5000/api/user/cart/${cartItemId}`, {
-        method: "DELETE"
+        method: "DELETE",
+        credentials: 'include'
       });
       const data = await response.json();
       if (data.success) {

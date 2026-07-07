@@ -1,15 +1,15 @@
 import { Router } from "express";
 import { addToCart, toggleWishlist, getCart, getWishlist, removeFromCart } from "../controllers/user.controller.js";
-import { verifyJWT } from "../Middleware/authMiddleware.js";
+import { userAuth } from "../Middleware/authMiddleware.js";
 
 const router = Router();
 
 // Protected user routes
-router.get("/cart", verifyJWT, getCart);
-router.post("/cart", verifyJWT, addToCart);
-router.delete("/cart/:cartItemId", verifyJWT, removeFromCart);
+router.get("/cart", userAuth, getCart);
+router.post("/cart", userAuth, addToCart);
+router.delete("/cart/:cartItemId", userAuth, removeFromCart);
 
-router.get("/wishlist", verifyJWT, getWishlist);
-router.post("/wishlist", verifyJWT, toggleWishlist);
+router.get("/wishlist", userAuth, getWishlist);
+router.post("/wishlist", userAuth, toggleWishlist);
 
 export default router;
