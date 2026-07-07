@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { verifyJWT } from "./middlewares/auth.middleware.js";
-import { authorizeRoles } from "./middlewares/role.middleware.js";
+import { verifyJWT } from "../Middleware/authMiddleware.js";
+import { authorizeRoles } from "../Middleware/roleMiddleware.js";
 import {
   createQuotation,
   getMyBookings,
