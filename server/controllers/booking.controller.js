@@ -67,8 +67,7 @@ export const createQuotation = async (req, res, next) => {
       stage: "quotation",
     });
 
-    // TODO [MODULE 7 - Notifications owner]: Yahan admin ko notify karo
-    // ki ek nayi booking request review ke liye aayi hai.
+    //Notify admin
 
     return res.status(201).json(
       new ApiResponse(
@@ -457,8 +456,7 @@ export const rejectBookingRequest = async (req, res, next) => {
     booking.adminReview.rejectionReason = reason || "Not specified";
     await booking.save();
 
-    // TODO [MODULE 7 - Notifications owner]: Customer ko notify karo
-    // ki unki request reject ho gayi hai (reason ke saath).
+    // notify customer
 
     return res
       .status(200)
