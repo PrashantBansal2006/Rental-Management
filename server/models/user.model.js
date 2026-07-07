@@ -4,17 +4,20 @@ const userSchema = new mongoose.Schema({
     name: {type: String,required: true},
     email: {type: String,required: true,unique: true},
     password: {type: String,required: true},
-    phone: String,
+    phone: {String,default:null},
     role: {type: String,
         enum: ["customer", "staff"],
         default: "customer"
     },
     address: {
-        street: String,
-        city: String,
-        state: String,
-        country: String,
-        zipCode: String
+        type: [{
+            street: String,
+            city: String,
+            state: String,
+            country: String,
+            zipCode: String,
+        }],
+        default: [],
     },
     verifyOtp :{ type : String , default :''},
     verifyOtpExpireAt :{ type : Number , default : 0 },
