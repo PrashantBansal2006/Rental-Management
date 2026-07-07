@@ -7,12 +7,12 @@ const productSchema = new mongoose.Schema({
     description: String,
 
     category: {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Category"
     },
 
     owner: {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     },
 
