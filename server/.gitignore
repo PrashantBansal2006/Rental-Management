@@ -1,4 +1,54 @@
+<<<<<<< HEAD
 node_modules/
 .env
 .env.*
 !.env.example
+=======
+# Dependencies
+node_modules/
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Temporary files
+tmp/
+temp/
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Package manager locks (keep only one)
+yarn.lock
+pnpm-lock.yaml
+
+# Misc
+*.local
+>>>>>>> abfaf9905c454847dc42a5f2d9d46fae3aeeaaad

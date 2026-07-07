@@ -4,19 +4,14 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-<<<<<<< HEAD
-=======
     "dev": "nodemon Server.js",
->>>>>>> c3a0695e2b29c666b84b71d3f5f0f600767765a3
     "start": "nodemon Server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-<<<<<<< HEAD
-  "description": ""
-=======
   "description": "",
+  "type": "module",
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.3.0",
@@ -28,7 +23,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.4",
     "nodemailer": "^9.0.3",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "pdfkit": "^0.19.1"
   }
->>>>>>> c3a0695e2b29c666b84b71d3f5f0f600767765a3
 }
