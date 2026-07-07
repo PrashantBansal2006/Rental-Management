@@ -1,13 +1,16 @@
 import { Router } from "express";
-import { createProduct } from "../controllers/product.controller.js";
+import { createProduct, getAllProducts, getProductById } from "../controllers/product.controller.js";
 import { verifyJWT } from "../Middleware/authMiddleware.js"; 
 
 const router = Router();
 
-// Assuming you want the user to be authenticated to create a product
-router.use(verifyJWT);
+// Get all products (Public route)
+router.get("/", getAllProducts);
 
-// Create a new product
-router.post("/", createProduct);
+// Get single product by ID (Public route)
+router.get("/:id", getProductById);
+
+// Create a new product (Protected route)
+router.post("/", verifyJWT, createProduct);
 
 export default router;

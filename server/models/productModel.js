@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import Category from "./categories.js";
 
 const productSchema = new Schema({
 
