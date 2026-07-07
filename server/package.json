@@ -13,14 +13,21 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.3.0",
+<<<<<<< HEAD
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
+=======
+    "cors": "^2.8.6",
+>>>>>>> 86f27df3cb757e881be3c3a3ca5c347ba962cd04
     "express": "^5.2.1",
     "express-validator": "^7.3.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.4",
+<<<<<<< HEAD
     "nodemailer": "^9.0.3",
+=======
+>>>>>>> 86f27df3cb757e881be3c3a3ca5c347ba962cd04
     "nodemon": "^3.1.14"
   }
 }
