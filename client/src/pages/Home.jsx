@@ -14,15 +14,6 @@ const Home = () => {
         <aside className="w-56 flex-shrink-0 border-r border-zinc-800 pr-6 mr-6 hidden md:block">
           <h2 className="text-lg font-medium mb-8">Product attributes</h2>
           
-          <div className="mb-10">
-            <h3 className="mb-4 font-medium">Colors</h3>
-            <ul className="space-y-2 text-zinc-400">
-              <li>-</li>
-              <li>-</li>
-              <li>-</li>
-            </ul>
-          </div>
-          
           <div>
             <h3 className="mb-4 font-medium">Price range</h3>
             <ul className="space-y-2 text-zinc-400">
