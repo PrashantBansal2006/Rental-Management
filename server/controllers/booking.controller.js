@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
-import { Booking } from "../models/booking.model.js";
-import { Product } from "../models/product.model.js";
-import { Rental } from "../models/rental.model.js";
-import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import { calculateRentalPrice } from "../services/pricing.service.js"; // [MODULE 5]
-import { initiatePayment } from "../services/payment.service.js"; // [MODULE 6]
-import { generateContractPDF } from "../services/contract.service.js";
+import { Booking } from "./models/booking.model.js";
+import { Product } from "./models/product.model.js";
+import { Rental } from "./models/rental.model.js";
+import { ApiError } from "./utils/ApiError.js";
+import { ApiResponse } from "./utils/ApiResponse.js";
+import { calculateRentalPrice } from "./services/pricing.service.js"; // [MODULE 5]
+import { initiatePayment } from "./services/payment.service.js"; // [MODULE 6]
+import { generateContractPDF } from "./services/contract.service.js";
 
 export const createQuotation = async (req, res, next) => {
   try {
