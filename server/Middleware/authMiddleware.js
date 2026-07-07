@@ -45,7 +45,7 @@ const adminAuth = async (req, res, next) => {
                 message: "User not found"
             });
         }
-        if (user.role !== "admin") {
+        if (user.role !== "staff") {
             return res.status(403).json({
                 success: false,
                 message: "Access denied"

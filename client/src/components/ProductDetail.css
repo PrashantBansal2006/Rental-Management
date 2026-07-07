@@ -1,0 +1,437 @@
+.pd-container {
+  min-height: 100vh;
+  background-color: #111111;
+  color: #e5e7eb;
+  font-family: sans-serif;
+}
+
+.pd-loading,
+.pd-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10rem 0;
+}
+
+.pd-loading-icon {
+  width: 3rem;
+  height: 3rem;
+  color: #a1a1aa;
+  margin-bottom: 1rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pd-empty-icon {
+  width: 4rem;
+  height: 4rem;
+  color: #52525b;
+  margin-bottom: 1rem;
+}
+
+.pd-back-link {
+  color: #3b82f6;
+  text-decoration: none;
+  margin-top: 1rem;
+}
+
+.pd-back-link:hover {
+  text-decoration: underline;
+}
+
+.pd-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.pd-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #a1a1aa;
+  text-decoration: none;
+  font-size: 0.875rem;
+  margin-bottom: 2rem;
+  transition: color 0.2s;
+}
+
+.pd-back-btn:hover {
+  color: #fff;
+}
+
+.pd-icon-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+.pd-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+}
+
+@media (min-width: 768px) {
+  .pd-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.pd-image-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: sticky;
+  top: 6rem;
+  align-self: start;
+  min-width: 0;
+}
+
+.pd-main-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 1.5rem;
+  border: 1px solid #27272a;
+}
+
+.pd-image-placeholder {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: radial-gradient(ellipse at center, rgba(30, 58, 138, 0.3), transparent);
+  border-radius: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pd-placeholder-icon {
+  width: 5rem;
+  height: 5rem;
+  color: #52525b;
+  stroke-width: 1;
+}
+
+.pd-thumbnails {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.pd-thumbnail {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  border: 1px solid #27272a;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.pd-thumbnail:hover {
+  border-color: #a1a1aa;
+}
+
+.pd-thumbnail.active {
+  border-color: #3b82f6; /* blue-500 */
+}
+
+.pd-details-section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pd-category {
+  color: #3b82f6;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.pd-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.pd-description {
+  color: #a1a1aa;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.pd-description-container {
+  margin-bottom: 2rem;
+}
+
+.pd-btn-readmore {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.pd-btn-readmore:hover {
+  color: #60a5fa;
+  text-decoration: underline;
+}
+
+.pd-divider {
+  height: 1px;
+  background-color: #27272a;
+  margin: 2rem 0;
+}
+
+.pd-section-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  color: #e5e7eb;
+}
+
+.pd-pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .pd-pricing-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.pd-price-card {
+  background-color: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.pd-price-card:hover {
+  transform: translateY(-2px);
+  border-color: #52525b;
+}
+
+.pd-price-label {
+  color: #a1a1aa;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.pd-price-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+  word-break: break-word;
+  text-align: center;
+}
+
+.pd-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+  background-color: #18181b;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid #27272a;
+}
+
+.pd-info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.pd-info-label {
+  color: #a1a1aa;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.pd-info-value {
+  color: #fff;
+  font-weight: 500;
+}
+
+.pd-status-in-stock {
+  color: #10b981;
+  /* emerald-500 */
+}
+
+.pd-status-out-stock {
+  color: #ef4444;
+  /* red-500 */
+}
+
+/* Calculator Section */
+.pd-calculator {
+  margin-top: 3rem;
+  padding: 1.5rem;
+  background-color: rgba(24, 24, 27, 0.5);
+  /* zinc-900 with opacity */
+  border: 1px solid #27272a;
+  border-radius: 1rem;
+}
+
+.pd-calc-grid {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.pd-calc-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pd-calc-row.quantity-col {
+  flex: 1;
+}
+
+.pd-calc-row.duration-col {
+  flex: 2;
+}
+
+.pd-calc-label {
+  color: #a1a1aa;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.pd-calc-controls {
+  display: flex;
+  gap: 1rem;
+}
+
+.pd-calc-input,
+.pd-calc-select {
+  background-color: #111111;
+  color: #e5e7eb;
+  border: 1px solid #52525b;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.pd-calc-controls .duration-input {
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.pd-calc-select {
+  flex: 1;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23a1a1aa%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+.pd-calc-select:focus,
+.pd-calc-input:focus {
+  outline: none;
+  border-color: #a1a1aa;
+}
+
+.pd-calc-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid #27272a;
+}
+
+.pd-total-label {
+  color: #a1a1aa;
+  font-size: 1.125rem;
+}
+
+.pd-total-amount {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  word-break: break-word;
+  text-align: right;
+}
+
+.pd-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.pd-btn-primary {
+  flex: 1;
+  background-color: #fff;
+  color: #000;
+  border: none;
+  border-radius: 9999px;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.pd-btn-primary:hover:not(:disabled) {
+  background-color: #e5e7eb;
+}
+
+.pd-btn-primary:disabled {
+  background-color: #52525b;
+  color: #a1a1aa;
+  cursor: not-allowed;
+}
+
+.pd-btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: transparent;
+  color: #e5e7eb;
+  border: 1px solid #52525b;
+  border-radius: 9999px;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.pd-btn-secondary:hover {
+  background-color: #27272a;
+}

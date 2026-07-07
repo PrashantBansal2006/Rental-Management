@@ -4,7 +4,7 @@ const userSchema = new mongoose.Schema({
     name: {type: String,required: true},
     email: {type: String,required: true,unique: true},
     password: {type: String,required: true},
-    phone: {String,default:null},
+    phone: { type: String, default: null },
     role: {type: String,
         enum: ["customer", "staff"],
         default: "customer"
@@ -19,6 +19,37 @@ const userSchema = new mongoose.Schema({
         }],
         default: [],
     },
+
+    wishlist: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product'
+    }],
+
+    cart: [{
+        product: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product',
+            required: true
+        },
+        quantity: {
+            type: Number,
+            required: true,
+            default: 1
+        },
+        duration: {
+            type: Number,
+            required: true
+        },
+        durationType: {
+            type: String,
+            enum: ['hourly', 'daily', 'weekly', 'monthly'],
+            required: true
+        },
+        totalPrice: {
+            type: Number,
+            required: true
+        }
+    }],
     verifyOtp :{ type : String , default :''},
     verifyOtpExpireAt :{ type : Number , default : 0 },
     isAccountVerified :{ type : Boolean , default : false },
