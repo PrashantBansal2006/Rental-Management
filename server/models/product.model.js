@@ -1,6 +1,6 @@
-import mongoose from "mongoose"
+import mongoose, { Schema } from "mongoose";
 
-const productSchema = new mongoose.Schema({
+const productSchema = new Schema({
 
     name: String,
 
@@ -28,8 +28,7 @@ const productSchema = new mongoose.Schema({
         type: String,
         enum: [
             "available",
-            "maintenance",
-            "inactive"
+            "not Available"
         ],
         default: "available"
     },

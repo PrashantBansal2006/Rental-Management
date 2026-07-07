@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Booking } from "../models/booking.model.js";
-import Product from "../models/productModel.js";
+import Product from "../models/product.model.js";
 import { Rental } from "../models/rental.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -111,7 +111,7 @@ export const getBookingById = async (req, res, next) => {
     }
 
     const booking = await Booking.findById(id)
-      .populate("customer", "name email") 
+      .populate("customer", "name email")
       .populate("product", "name images pricing securityDeposit");
 
     if (!booking) {
@@ -200,7 +200,7 @@ export const confirmBooking = async (req, res, next) => {
         `Booking cannot be confirmed from its current stage: ${booking.stage}`
       );
     }
-    
+
     if (booking.approvalStatus === "pending_admin_review") {
       throw new ApiError(
         400,
@@ -377,7 +377,7 @@ export const getPendingApprovals = async (req, res, next) => {
     })
       .populate("customer", "name email")
       .populate("product", "name")
-      .sort({ createdAt: 1 }); 
+      .sort({ createdAt: 1 });
 
     return res
       .status(200)
