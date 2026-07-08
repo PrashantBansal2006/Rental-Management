@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Clock
 } from "lucide-react";
+import Navbar from "../components/Navbar";
 
 const BACKEND_URL = "http://localhost:5000";
 
@@ -141,7 +142,7 @@ export default function CreateQuotation() {
   };
 
   const handleSubmitAll = async (e) => {
-    e.preventDefault(); // Default form reload stop karne ke liye
+    e.preventDefault();
     setError("");
     setMessage("");
     setItemResults({});
@@ -236,12 +237,12 @@ export default function CreateQuotation() {
 
   if (checkoutItems.length === 0) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 text-center">
         <Package className="w-12 h-12 text-zinc-600 mb-3 animate-pulse" />
-        <p className="text-zinc-400 mb-4 font-medium">No items selected for quotation checkout.</p>
+        <p className="text-zinc-400 mb-4 font-medium px-4">No items selected for quotation checkout.</p>
         <button 
           onClick={() => navigate("/")} 
-          className="bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-200 px-6 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer"
+          className="bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-200 px-6 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer text-sm"
         >
           <ArrowLeft className="w-4 h-4" /> Go To Home
         </button>
@@ -250,17 +251,20 @@ export default function CreateQuotation() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
+    <div className="min-h-screen bg-black text-white">
+      <Navbar/>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-10">
+        
+        {/* Top Header */}
+        <div className="flex items-center gap-3 mb-6 md:mb-8">
           <button 
             type="button"
             onClick={() => navigate(-1)} 
-            className="p-2.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 rounded-xl transition-all text-zinc-400 hover:text-white cursor-pointer"
+            className="p-2 md:p-2.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 rounded-xl transition-all text-zinc-400 hover:text-white cursor-pointer"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
           </button>
-          <h1 className="text-2xl font-extrabold text-zinc-100 tracking-tight">Complete Checkout Quotation</h1>
+          <h1 className="text-xl md:text-2xl font-extrabold text-zinc-100 tracking-tight">Complete Checkout Quotation</h1>
         </div>
 
         <form onSubmit={handleSubmitAll} className="space-y-6">
@@ -275,11 +279,11 @@ export default function CreateQuotation() {
             const pricingTiers = productDetails.pricing || {};
 
             return (
-              <div key={item._id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 md:p-6 space-y-5 transition-all hover:border-zinc-700/60">
+              <div key={item._id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-5 transition-all hover:border-zinc-700/60">
                 
                 {/* Product Details Header */}
-                <div className="flex flex-col sm:flex-row gap-5 pb-4 border-b border-zinc-800/60">
-                  <div className="w-full sm:w-32 h-32 shrink-0 bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden flex items-center justify-center relative group">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 pb-4 border-b border-zinc-800/60">
+                  <div className="w-full sm:w-32 h-40 sm:h-32 shrink-0 bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden flex items-center justify-center relative group">
                     {imageUrl ? (
                       <img 
                         src={imageUrl} 
@@ -291,33 +295,33 @@ export default function CreateQuotation() {
                     )}
                   </div>
 
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 space-y-2 flex flex-col justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-2 sm:gap-4">
                       <div>
-                        <h3 className="text-lg font-bold text-zinc-100 tracking-wide">
+                        <h3 className="text-base sm:text-lg font-bold text-zinc-100 tracking-wide">
                           {productDetails.name || "Product Item"}
                         </h3>
-                        <p className="text-xs font-medium text-zinc-500 mt-0.5 uppercase tracking-wider">Log ID: {item._id}</p>
+                        <p className="text-[10px] sm:text-xs font-medium text-zinc-500 mt-0.5 uppercase tracking-wider break-all">Log ID: {item._id}</p>
                       </div>
-                      <span className="text-xs font-extrabold px-3 py-1.5 bg-zinc-950 text-blue-400 border border-zinc-800 rounded-xl shrink-0">
+                      <span className="text-[11px] sm:text-xs font-extrabold px-2.5 py-1 bg-zinc-950 text-blue-400 border border-zinc-800 rounded-xl shrink-0 self-start sm:self-auto">
                         Units Logged: {item.quantity}
                       </span>
                     </div>
 
-                    <p className="text-sm text-zinc-400 line-clamp-2 leading-relaxed font-normal">
+                    <p className="text-xs sm:text-sm text-zinc-400 line-clamp-2 leading-relaxed font-normal">
                       {productDetails.description || "No description provided for this item."}
                     </p>
 
-                    <div className="flex flex-wrap gap-2 pt-1 text-[11px] font-bold text-zinc-400">
-                      {pricingTiers.hourly && <span className="bg-zinc-950 px-2.5 py-1 rounded-lg border border-zinc-800/80">₹{pricingTiers.hourly}/hr</span>}
-                      {pricingTiers.daily && <span className="bg-zinc-950 px-2.5 py-1 rounded-lg border border-zinc-800/80">₹{pricingTiers.daily}/day</span>}
-                      {pricingTiers.weekly && <span className="bg-zinc-950 px-2.5 py-1 rounded-lg border border-zinc-800/80">₹{pricingTiers.weekly}/wk</span>}
-                      {pricingTiers.monthly && <span className="bg-zinc-950 px-2.5 py-1 rounded-lg border border-zinc-800/80">₹{pricingTiers.monthly}/mo</span>}
+                    <div className="flex flex-wrap gap-1.5 pt-1 text-[10px] sm:text-[11px] font-bold text-zinc-400">
+                      {pricingTiers.hourly && <span className="bg-zinc-950 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-zinc-800/80">₹{pricingTiers.hourly}/hr</span>}
+                      {pricingTiers.daily && <span className="bg-zinc-950 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-zinc-800/80">₹{pricingTiers.daily}/day</span>}
+                      {pricingTiers.weekly && <span className="bg-zinc-950 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-zinc-800/80">₹{pricingTiers.weekly}/wk</span>}
+                      {pricingTiers.monthly && <span className="bg-zinc-950 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-zinc-800/80">₹{pricingTiers.monthly}/mo</span>}
                     </div>
                   </div>
                 </div>
 
-                {/* Date Inputs - Added onKeyDown listener to stop auto-submit reloads */}
+                {/* Date Inputs */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 mb-1.5">
@@ -329,7 +333,7 @@ export default function CreateQuotation() {
                       value={itemDates.pickupDate}
                       onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                       onChange={(e) => handleDateChange(item._id, "pickupDate", e.target.value)}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 text-white scheme-dark cursor-pointer transition-all"
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 sm:py-3 text-sm focus:outline-none focus:border-blue-500 text-white scheme-dark cursor-pointer transition-all"
                       required
                     />
                   </div>
@@ -344,7 +348,7 @@ export default function CreateQuotation() {
                       value={itemDates.returnDate}
                       onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                       onChange={(e) => handleDateChange(item._id, "returnDate", e.target.value)}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 text-white scheme-dark cursor-pointer transition-all"
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 sm:py-3 text-sm focus:outline-none focus:border-blue-500 text-white scheme-dark cursor-pointer transition-all"
                       required
                     />
                   </div>
@@ -358,29 +362,29 @@ export default function CreateQuotation() {
                   </div>
                 ) : priceInfo ? (
                   <div className="bg-zinc-950 rounded-xl p-4 text-xs space-y-2.5 border border-zinc-800/60">
-                    <div className="flex justify-between items-center">
-                      <span className="text-zinc-500 flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Rental Duration:</span>
-                      <span className="font-semibold text-zinc-200 bg-zinc-900 px-2.5 py-0.5 border border-zinc-800 rounded-md">{priceInfo.days} Days</span>
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="text-zinc-500 flex items-center gap-1"><Clock className="w-3.5 h-3.5 shrink-0" /> Rental Duration:</span>
+                      <span className="font-semibold text-zinc-200 bg-zinc-900 px-2.5 py-0.5 border border-zinc-800 rounded-md whitespace-nowrap">{priceInfo.days} Days</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-zinc-500 flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> Rate Applied:</span>
-                      <span className="font-medium text-zinc-300">
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="text-zinc-500 flex items-center gap-1"><Tag className="w-3.5 h-3.5 shrink-0" /> Rate Applied:</span>
+                      <span className="font-medium text-zinc-300 text-right">
                         ₹{priceInfo.ratePerUnit} x {priceInfo.units} ({priceInfo.unitLabel})
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-zinc-500 flex items-center gap-1"><ShieldAlert className="w-3.5 h-3.5" /> Security Deposit:</span>
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="text-zinc-500 flex items-center gap-1"><ShieldAlert className="w-3.5 h-3.5 shrink-0" /> Security Deposit:</span>
                       <span className="font-semibold text-emerald-400">₹{priceInfo.securityDeposit}</span>
                     </div>
-                    <div className="flex justify-between items-center border-t border-zinc-800/80 pt-2.5 font-bold">
-                      <span className="text-zinc-300 flex items-center gap-1"><Wallet className="w-3.5 h-3.5" /> Item Estimated Total:</span>
+                    <div className="flex justify-between items-center border-t border-zinc-800/80 pt-2.5 font-bold gap-2">
+                      <span className="text-zinc-300 flex items-center gap-1"><Wallet className="w-3.5 h-3.5 shrink-0" /> Item Estimated Total:</span>
                       <span className="text-blue-400 text-sm">₹{priceInfo.totalAmount}</span>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-zinc-500 text-xs text-center py-3 border border-dashed border-zinc-800/80 rounded-xl flex items-center justify-center gap-1.5 bg-zinc-950/40">
-                    <Info className="w-3.5 h-3.5 text-zinc-600" />
-                    Select valid segment duration dates to dynamically calculate estimations.
+                  <div className="text-zinc-500 text-xs text-center py-4 border border-dashed border-zinc-800/80 rounded-xl flex items-center justify-center gap-1.5 bg-zinc-950/40 px-4">
+                    <Info className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
+                    <span>Select valid segment duration dates to dynamically calculate estimations.</span>
                   </div>
                 )}
 
@@ -393,7 +397,7 @@ export default function CreateQuotation() {
                     }`}
                   >
                     {result.success ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 shrink-0" />}
-                    {result.message}
+                    <span className="break-words">{result.message}</span>
                   </div>
                 )}
               </div>
@@ -401,16 +405,16 @@ export default function CreateQuotation() {
           })}
 
           {/* Bottom Total Segment */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-5">
-            <div>
-              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-0.5">Grand Value Bill Payable</p>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-5">
+            <div className="text-center sm:text-left w-full sm:w-auto">
+              <p className="text-[10px] sm:text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-0.5">Grand Value Bill Payable</p>
               <h2 className="text-2xl font-black text-blue-400">₹{calculateGrandTotalPayable()}</h2>
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm px-8 py-3.5 rounded-xl transition-all duration-150 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-blue-600/10"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm px-8 py-3.5 rounded-xl transition-all duration-150 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-blue-600/10"
             >
               {submitting ? (
                 <>
