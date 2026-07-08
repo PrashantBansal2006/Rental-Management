@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { createProduct, getAllProducts, getProductById } from "../controllers/product.controller.js";
-import { userAuth } from "../Middleware/authMiddleware.js";
+import { adminAuth, userAuth } from "../Middleware/authMiddleware.js";
 
 const router = Router();
 
@@ -11,6 +11,6 @@ router.get("/", getAllProducts);
 router.get("/:id", getProductById);
 
 // Create a new product (Protected route)
-router.post("/", userAuth, createProduct);
+router.post("/", adminAuth, createProduct);
 
 export default router;
