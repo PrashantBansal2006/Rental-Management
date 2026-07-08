@@ -285,7 +285,7 @@ export default function MyBookings() {
                           className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold px-5 py-2 rounded-xl disabled:opacity-50 cursor-pointer flex items-center gap-2 transition-all duration-150"
                         >
                           {isActing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                          Confirm & Generate Contract
+                          Confirm Order
                         </button>
                       )}
 
