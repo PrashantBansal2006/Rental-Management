@@ -28,19 +28,19 @@ router.get("/:id/contract", getContractInfo);
 
 router.get(
   "/admin/pending",
-  authorizeRoles("end_user"),
+  authorizeRoles("staff"),
   getPendingApprovals
 );
 
 router.patch(
   "/admin/:id/approve",
-  authorizeRoles("end_user"),
+  authorizeRoles("staff"),
   approveBookingRequest
 );
 
 router.patch(
   "/admin/:id/reject",
-  authorizeRoles("end_user"),
+  authorizeRoles("staff"),
   rejectBookingRequest
 );
 
