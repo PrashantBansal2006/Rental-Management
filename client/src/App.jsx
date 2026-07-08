@@ -24,9 +24,22 @@ const App = () => {
         
         {/* Default /home route rendering the Home page */}
         <Route path="/home" element={<Home />} />
-        <Route path="/createQuotation" element={<CreateQuotation/>}/>
-        <Route path="/mybookings" element={<MyBookings/>}/>
-        <Route path="/adminDashboard" element={<AdminDashboard/>}/>
+
+        <Route path="/createQuotation" element={
+          <ProtectedRoute>
+            <CreateQuotation/>
+          </ProtectedRoute>
+        }/>
+        <Route path="/mybookings" element={
+          <ProtectedRoute>
+            <MyBookings/>
+          </ProtectedRoute>
+        }/>
+        <Route path="/adminDashboard" element={
+          <ProtectedRoute>
+            <AdminDashboard/>
+          </ProtectedRoute>
+        }/>
         <Route path="/add-product" element={<AddProduct/>}/>
         
         {/* Auth pages (Only accessible if NOT logged in) */}
