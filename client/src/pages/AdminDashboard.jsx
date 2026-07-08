@@ -1,172 +1,224 @@
 import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Search, Plus, Package, LayoutDashboard, LogOut } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function AdminDashboard() {
-  const [pending, setPending] = useState([]);
+  const [metrics, setMetrics] = useState(null);
+  const [myProducts, setMyProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const fetchPending = async () => {
-    try {
-      const response = await fetch("/api/bookings/admin/pending", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      const data = await response.json();
-      if (response.ok) setPending(data.data || data);
-    } catch (err) {
-      console.error("Error fetching pending approvals", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchPending();
+    const fetchData = async () => {
+      try {
+        const [metricsRes, productsRes] = await Promise.all([
+          fetch("http://localhost:5000/api/bookings/admin/metrics", {
+            credentials: "include"
+          }),
+          fetch("http://localhost:5000/api/products/my-products", {
+            credentials: "include"
+          })
+        ]);
+
+        const metricsData = await metricsRes.json();
+        const productsData = await productsRes.json();
+
+        if (metricsRes.ok) setMetrics(metricsData.data || metricsData);
+        if (productsRes.ok) setMyProducts(productsData.products || []);
+      } catch (err) {
+        console.error("Error fetching admin data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
-  const handleApprove = async (id) => {
-    try {
-      const response = await fetch(`/api/bookings/admin/${id}/approve`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      if (response.ok) {
-        alert("Request Approved Successfully!");
-        fetchPending();
-      }
-    } catch (err) {
-      alert("Approval failed");
-    }
-  };
-
-  const handleReject = async (id) => {
-    const reason = prompt("Enter reason for rejection:");
-    if (reason === null) return;
-
-    try {
-      const response = await fetch(`/api/bookings/admin/${id}/reject`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ reason }),
-      });
-      if (response.ok) {
-        alert("Request Rejected.");
-        fetchPending();
-      }
-    } catch (err) {
-      alert("Rejection failed");
-    }
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <p className="text-zinc-400 text-lg animate-pulse">Loading Admin Data...</p>
+        <p className="text-zinc-400 text-lg animate-pulse">Loading Dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white px-4 py-10 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#111111] text-gray-200 flex font-sans">
+      
+      {/* Sidebar / Navbar */}
+      <div className="w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col h-screen sticky top-0">
+        <div className="p-6 border-b border-zinc-800">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <LayoutDashboard className="w-5 h-5 text-blue-500" />
+            Staff Panel
+          </h2>
+        </div>
         
-        {/* Header Section */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between border-b border-zinc-800 pb-5">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-white">Admin Dashboard</h2>
-            <p className="mt-2 text-sm text-zinc-400">
-              Review and manage incoming customer rental quotation requests.
-            </p>
-          </div>
-          <div className="mt-4 md:mt-0">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400 border border-amber-500/20">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-              {pending.length} Pending Actions
-            </span>
+        <div className="p-4 flex-1 overflow-y-auto">
+          <Link 
+            to="/add-product" 
+            className="w-full mb-6 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Product
+          </Link>
+
+          <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3 px-2">
+            My Listed Products
+          </h3>
+          <div className="space-y-1">
+            {myProducts.length === 0 ? (
+              <p className="text-zinc-500 text-sm px-2 italic">No products listed yet.</p>
+            ) : (
+              myProducts.map(prod => (
+                <div key={prod._id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-zinc-800/50 text-sm text-zinc-300 transition-colors">
+                  <Package className="w-4 h-4 text-zinc-500" />
+                  <span className="truncate">{prod.name}</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Content Section */}
-        {pending.length === 0 ? (
-          <div className="text-center py-16 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl">
-            <svg
-              className="mx-auto h-12 w-12 text-zinc-600 mb-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <p className="text-zinc-400 text-lg font-medium">All caught up!</p>
-            <p className="text-zinc-500 text-sm mt-1">No pending requests to review right now.</p>
+        <div className="p-4 border-t border-zinc-800">
+          <button onClick={handleLogout} className="flex items-center gap-2 text-zinc-400 hover:text-red-400 transition-colors px-2 py-2 w-full text-left text-sm font-medium">
+            <LogOut className="w-4 h-4" />
+            Logout
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto p-8">
+        
+        {/* Top Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="relative w-96">
+            <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <input 
+              type="text" 
+              placeholder="Search..." 
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-zinc-700 text-sm text-white"
+            />
           </div>
-        ) : (
-          <div className="overflow-x-auto bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-900/50">
-                  <th className="p-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Customer</th>
-                  <th className="p-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Product</th>
-                  <th className="p-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Quantity</th>
-                  <th className="p-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Total Amount</th>
-                  <th className="p-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/60">
-                {pending.map((req) => (
-                  <tr key={req._id} className="hover:bg-zinc-800/30 transition duration-150">
-                    {/* Customer Details */}
-                    <td className="p-4">
-                      <div className="font-medium text-white">{req.customer?.name || "Unknown"}</div>
-                      <div className="text-xs text-zinc-500 mt-0.5">{req.customer?.email}</div>
-                    </td>
-                    
-                    {/* Product Name */}
-                    <td className="p-4 text-sm font-medium text-zinc-200">
-                      {req.product?.name || <span className="text-zinc-600 italic">N/A</span>}
-                    </td>
-                    
-                    {/* Quantity */}
-                    <td className="p-4 text-sm text-zinc-300">
-                      <span className="bg-zinc-800 px-2 py-1 rounded text-xs font-mono border border-zinc-700">
-                        {req.quantity}
-                      </span>
-                    </td>
-                    
-                    {/* Amount */}
-                    <td className="p-4 text-sm font-semibold text-blue-400">
-                      Rs. {req.totalAmount}
-                    </td>
-                    
-                    {/* Action Buttons */}
-                    <td className="p-4 text-sm text-right">
-                      <div className="flex items-center justify-end gap-3">
-                        <button
-                          onClick={() => handleApprove(req._id)}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs px-3 py-1.5 rounded-lg transition duration-150 shadow-md shadow-emerald-950/20"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleReject(req._id)}
-                          className="bg-zinc-800 hover:bg-red-900/40 border border-zinc-700 hover:border-red-800 text-zinc-300 hover:text-red-400 font-medium text-xs px-3 py-1.5 rounded-lg transition duration-150"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    </td>
+          <select className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-sm text-zinc-300 focus:outline-none focus:border-zinc-700">
+            <option>Last 30 days</option>
+            <option>Last 7 days</option>
+            <option>All time</option>
+          </select>
+        </div>
+
+        {/* Stat Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center">
+            <h3 className="text-zinc-400 font-medium mb-2">Quotations</h3>
+            <p className="text-3xl font-semibold text-white">{metrics?.quotations || 0}</p>
+          </div>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center">
+            <h3 className="text-zinc-400 font-medium mb-2">Rentals</h3>
+            <p className="text-3xl font-semibold text-white">{metrics?.rentals || 0}</p>
+          </div>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center">
+            <h3 className="text-zinc-400 font-medium mb-2">Revenue</h3>
+            <p className="text-3xl font-semibold text-white">Rs. {metrics?.revenue?.toLocaleString() || 0}</p>
+          </div>
+        </div>
+
+        {/* Tables Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          {/* Top Product Categories */}
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-4">Top Product Categories</h3>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-zinc-800/50 border-b border-zinc-800">
+                  <tr>
+                    <th className="px-6 py-4 font-medium text-zinc-400">Category</th>
+                    <th className="px-6 py-4 font-medium text-zinc-400 text-right">Ordered</th>
+                    <th className="px-6 py-4 font-medium text-zinc-400 text-right">Revenue</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-zinc-800">
+                  {metrics?.topCategories?.map((item, idx) => (
+                    <tr key={idx} className="hover:bg-zinc-800/30">
+                      <td className="px-6 py-4 text-zinc-300">{item.category}</td>
+                      <td className="px-6 py-4 text-right text-zinc-400">{item.ordered}</td>
+                      <td className="px-6 py-4 text-right font-medium text-white">{item.revenue}</td>
+                    </tr>
+                  ))}
+                  {(!metrics?.topCategories || metrics.topCategories.length === 0) && (
+                    <tr><td colSpan="3" className="px-6 py-8 text-center text-zinc-500 italic">No data available</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        )}
+
+          {/* Top Products */}
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-4">Top Products</h3>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-zinc-800/50 border-b border-zinc-800">
+                  <tr>
+                    <th className="px-6 py-4 font-medium text-zinc-400">Product</th>
+                    <th className="px-6 py-4 font-medium text-zinc-400 text-right">Ordered</th>
+                    <th className="px-6 py-4 font-medium text-zinc-400 text-right">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800">
+                  {metrics?.topProducts?.map((item, idx) => (
+                    <tr key={idx} className="hover:bg-zinc-800/30">
+                      <td className="px-6 py-4 text-zinc-300">{item.product}</td>
+                      <td className="px-6 py-4 text-right text-zinc-400">{item.ordered}</td>
+                      <td className="px-6 py-4 text-right font-medium text-white">{item.revenue}</td>
+                    </tr>
+                  ))}
+                  {(!metrics?.topProducts || metrics.topProducts.length === 0) && (
+                    <tr><td colSpan="3" className="px-6 py-8 text-center text-zinc-500 italic">No data available</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Top Customer */}
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-4">Top Customer</h3>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-zinc-800/50 border-b border-zinc-800">
+                  <tr>
+                    <th className="px-6 py-4 font-medium text-zinc-400">Customer</th>
+                    <th className="px-6 py-4 font-medium text-zinc-400 text-right">Ordered</th>
+                    <th className="px-6 py-4 font-medium text-zinc-400 text-right">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800">
+                  {metrics?.topCustomers?.map((item, idx) => (
+                    <tr key={idx} className="hover:bg-zinc-800/30">
+                      <td className="px-6 py-4 text-zinc-300">{item.customer}</td>
+                      <td className="px-6 py-4 text-right text-zinc-400">{item.ordered}</td>
+                      <td className="px-6 py-4 text-right font-medium text-white">{item.revenue}</td>
+                    </tr>
+                  ))}
+                  {(!metrics?.topCustomers || metrics.topCustomers.length === 0) && (
+                    <tr><td colSpan="3" className="px-6 py-8 text-center text-zinc-500 italic">No data available</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );
