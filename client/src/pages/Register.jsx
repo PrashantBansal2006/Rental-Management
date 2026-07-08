@@ -132,6 +132,20 @@ const Register = () => {
               </div>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Role *</label>
+              <select
+                name="role"
+                required
+                className="w-full bg-[#111111] border border-zinc-700 text-white rounded-xl px-4 py-2.5 focus:outline-none focus:border-blue-500 transition-colors"
+                value={formData.role}
+                onChange={handleChange}
+              >
+                <option value="customer">Customer</option>
+                <option value="staff">Staff</option>
+              </select>
+            </div>
+
             <div className="pt-2">
               <h3 className="text-sm font-medium text-white mb-3">Address Details</h3>
               <div className="space-y-4">

@@ -142,9 +142,20 @@ async function logout(req, res) {
 
 async function isAuthenticated(req, res) {
     try{
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
         return res.status(200).json({
             success : true,
-            message : "User is Authenticated"
+            message : "User is Authenticated",
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                isVerified: user.isAccountVerified
+            }
         })
     }
     catch(err){

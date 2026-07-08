@@ -4,8 +4,8 @@ import { adminAuth, userAuth } from "../Middleware/authMiddleware.js";
 
 const router = Router();
 
-// Assuming you want the user to be authenticated to create a product
-router.use(userAuth);
+// Get all products (Public route)
+router.get("/", getAllProducts);
 
 // Get single product by ID (Public route)
 router.get("/:id", getProductById);
