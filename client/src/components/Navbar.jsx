@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { User, Menu, X, ShoppingCart, Heart } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
 const Navbar = ({ cartCount = 0, wishlistCount = 0 }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -52,14 +54,14 @@ const Navbar = ({ cartCount = 0, wishlistCount = 0 }) => {
           </Link>
 
           <div className="relative">
-            {isLoggedIn ? (
+            {user ? (
               <>
                 <button 
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center gap-2 text-sm hover:text-white transition-colors cursor-pointer"
                 >
                   <User className="w-4 h-4 stroke-[2]" />
-                  <span className="font-medium">User</span>
+                  <span className="font-medium">{user.name || 'Account'}</span>
                 </button>
 
                 {/* Profile Dropdown Menu */}
@@ -69,8 +71,9 @@ const Navbar = ({ cartCount = 0, wishlistCount = 0 }) => {
                     <Link to="/settings" className="block px-4 py-2 text-sm hover:bg-zinc-800 transition-colors text-gray-200">Settings</Link>
                     <button 
                       onClick={() => {
-                        setIsLoggedIn(false);
+                        logout();
                         setShowProfileMenu(false);
+                        navigate('/login');
                       }} 
                       className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-zinc-800 transition-colors"
                     >
@@ -81,7 +84,7 @@ const Navbar = ({ cartCount = 0, wishlistCount = 0 }) => {
               </>
             ) : (
               <button 
-                onClick={() => setIsLoggedIn(true)}
+                onClick={() => navigate('/login')}
                 className="text-sm font-medium hover:text-white transition-colors cursor-pointer"
               >
                 Login
