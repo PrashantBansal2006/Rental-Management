@@ -1,173 +1,346 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import Navbar from "../components/Navbar";
+import {
+  Loader2,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Package,
+  IndianRupee,
+  Users,
+  AlertTriangle,
+  ClipboardList,
+} from "lucide-react";
+
+const API_BASE = "http://localhost:5000/api/bookings";
+
+const formatDate = (value) => {
+  if (!value) return "-";
+  return new Date(value).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 export default function AdminDashboard() {
-  const [pending, setPending] = useState([]);
+  const [allBookings, setAllBookings] = useState([]);
+  const [filteredBookings, setFilteredBookings] = useState([]);
+  const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState("");
+  const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [rejectingId, setRejectingId] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
 
-  const fetchPending = async () => {
+  const applyFilter = useCallback((list, tab) => {
+    if (tab === "all") {
+      setFilteredBookings(list);
+    } else {
+      setFilteredBookings(list.filter((b) => b.approvalStatus === tab));
+    }
+  }, []);
+
+  const fetchBookings = useCallback(async () => {
+    setLoading(true);
+    setPageError("");
     try {
-      const response = await fetch("/api/bookings/admin/pending", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      const response = await fetch(`${API_BASE}/admin/all-bookings`, {
+        credentials: "include"
       });
       const data = await response.json();
-      if (response.ok) setPending(data.data || data);
+      if (response.ok && data.success) {
+        const bookingsList = data.data || [];
+        setAllBookings(bookingsList);
+        applyFilter(bookingsList, activeTab);
+      } else {
+        setPageError(data.message || "Failed to load logs");
+        setAllBookings([]);
+        setFilteredBookings([]);
+      }
     } catch (err) {
-      console.error("Error fetching pending approvals", err);
+      setPageError("Could not connect to the server");
+      setAllBookings([]);
+      setFilteredBookings([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab, applyFilter]);
 
   useEffect(() => {
-    fetchPending();
-  }, []);
+    fetchBookings();
+  }, [fetchBookings]);
 
-  const handleApprove = async (id) => {
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName);
+    applyFilter(allBookings, tabName);
+  };
+
+  const handleApprove = async (bookingId) => {
+    setActionLoadingId(bookingId);
+    setPageError("");
     try {
-      const response = await fetch(`/api/bookings/admin/${id}/approve`, {
+      const response = await fetch(`${API_BASE}/admin/${bookingId}/approve`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        credentials: "include"
       });
-      if (response.ok) {
-        alert("Request Approved Successfully!");
-        fetchPending();
+      const data = await response.json();
+      if (response.ok && data.success) {
+        await fetchBookings();
+      } else {
+        setPageError(data.message || "Could not approve booking");
       }
     } catch (err) {
-      alert("Approval failed");
+      setPageError("Network error while approving booking");
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
-  const handleReject = async (id) => {
-    const reason = prompt("Enter reason for rejection:");
-    if (reason === null) return;
-
+  const handleRejectSubmit = async (bookingId) => {
+    setActionLoadingId(bookingId);
+    setPageError("");
     try {
-      const response = await fetch(`/api/bookings/admin/${id}/reject`, {
+      const response = await fetch(`${API_BASE}/admin/${bookingId}/reject`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ reason }),
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ reason: rejectReason || "Not specified" }),
       });
-      if (response.ok) {
-        alert("Request Rejected.");
-        fetchPending();
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setRejectingId(null);
+        setRejectReason("");
+        await fetchBookings();
+      } else {
+        setPageError(data.message || "Could not reject booking");
       }
     } catch (err) {
-      alert("Rejection failed");
+      setPageError("Network error while rejecting booking");
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <p className="text-zinc-400 text-lg animate-pulse">Loading Admin Data...</p>
-      </div>
-    );
-  }
+  const pendingRequests = allBookings.filter(b => b.approvalStatus === "pending_admin_review" || !b.approvalStatus);
+  const totalPendingValue = pendingRequests.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+  const uniqueCustomers = new Set(allBookings.map((b) => b.customer?._id || b.customer)).size;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white px-4 py-10 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        
-        {/* Header Section */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between border-b border-zinc-800 pb-5">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-white">Admin Dashboard</h2>
-            <p className="mt-2 text-sm text-zinc-400">
-              Review and manage incoming customer rental quotation requests.
-            </p>
+    <div className="min-h-screen bg-black text-white">
+      <Navbar />
+
+      <main className="max-w-5xl mx-auto p-8">
+        <h1 className="text-2xl font-extrabold text-zinc-100 mb-6">Admin Dashboard</h1>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+            <div className="flex items-center gap-2 text-amber-400 mb-2">
+              <Clock className="w-4 h-4" />
+              <span className="text-xs font-semibold">Pending Requests</span>
+            </div>
+            <p className="text-2xl font-extrabold text-zinc-100">{pendingRequests.length}</p>
           </div>
-          <div className="mt-4 md:mt-0">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-400 border border-amber-500/20">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-              {pending.length} Pending Actions
-            </span>
+
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+            <div className="flex items-center gap-2 text-blue-400 mb-2">
+              <IndianRupee className="w-4 h-4" />
+              <span className="text-xs font-semibold">Value Awaiting Approval</span>
+            </div>
+            <p className="text-2xl font-extrabold text-zinc-100">₹{totalPendingValue}</p>
+          </div>
+
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+            <div className="flex items-center gap-2 text-violet-400 mb-2">
+              <Users className="w-4 h-4" />
+              <span className="text-xs font-semibold">Total Unique Customers</span>
+            </div>
+            <p className="text-2xl font-extrabold text-zinc-100">{uniqueCustomers}</p>
           </div>
         </div>
 
-        {/* Content Section */}
-        {pending.length === 0 ? (
-          <div className="text-center py-16 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl">
-            <svg
-              className="mx-auto h-12 w-12 text-zinc-600 mb-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-zinc-800 pb-4 mb-6 gap-4">
+          <h2 className="text-lg font-bold text-zinc-200">Rental Requests Logs</h2>
+          
+          <div className="flex flex-wrap gap-1.5 bg-zinc-950 p-1 rounded-xl border border-zinc-800/60">
+            <button
+              onClick={() => handleTabChange("all")}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer ${
+                activeTab === "all" ? "bg-zinc-800 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200"
+              }`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <p className="text-zinc-400 text-lg font-medium">All caught up!</p>
-            <p className="text-zinc-500 text-sm mt-1">No pending requests to review right now.</p>
+              All ({allBookings.length})
+            </button>
+            <button
+              onClick={() => handleTabChange("pending_admin_review")}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer ${
+                activeTab === "pending_admin_review" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              Pending ({pendingRequests.length})
+            </button>
+            <button
+              onClick={() => handleTabChange("approved")}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer ${
+                activeTab === "approved" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              Approved ({allBookings.filter(b => b.approvalStatus === "approved").length})
+            </button>
+            <button
+              onClick={() => handleTabChange("rejected")}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer ${
+                activeTab === "rejected" ? "bg-red-500/10 text-red-400 border border-red-500/20" : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              Rejected ({allBookings.filter(b => b.approvalStatus === "rejected").length})
+            </button>
+          </div>
+        </div>
+
+        {pageError && (
+          <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 mb-6 text-red-400 text-sm flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            {pageError}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-zinc-400">
+            <Loader2 className="w-7 h-7 animate-spin mb-3" />
+            <p>Loading requests log...</p>
+          </div>
+        ) : filteredBookings.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center text-zinc-400">
+            <ClipboardList className="w-9 h-9 mb-3 text-zinc-600" />
+            <p>No records found for this status segment.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-900/50">
-                  <th className="p-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Customer</th>
-                  <th className="p-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Product</th>
-                  <th className="p-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Quantity</th>
-                  <th className="p-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Total Amount</th>
-                  <th className="p-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/60">
-                {pending.map((req) => (
-                  <tr key={req._id} className="hover:bg-zinc-800/30 transition duration-150">
-                    {/* Customer Details */}
-                    <td className="p-4">
-                      <div className="font-medium text-white">{req.customer?.name || "Unknown"}</div>
-                      <div className="text-xs text-zinc-500 mt-0.5">{req.customer?.email}</div>
-                    </td>
-                    
-                    {/* Product Name */}
-                    <td className="p-4 text-sm font-medium text-zinc-200">
-                      {req.product?.name || <span className="text-zinc-600 italic">N/A</span>}
-                    </td>
-                    
-                    {/* Quantity */}
-                    <td className="p-4 text-sm text-zinc-300">
-                      <span className="bg-zinc-800 px-2 py-1 rounded text-xs font-mono border border-zinc-700">
-                        {req.quantity}
+          <div className="space-y-4">
+            {filteredBookings.map((booking) => {
+              const isActing = actionLoadingId === booking._id;
+              const rentAmount = booking.rentalAmount || ((booking.totalAmount || 0) - (booking.securityDeposit || 0));
+
+              return (
+                <div key={booking._id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center">
+                        <Package className="w-5 h-5 text-zinc-500" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-zinc-100">
+                          {booking.product?.name || "Product"}
+                        </h3>
+                        <p className="text-xs text-zinc-500">
+                          {booking.customer?.name || "Customer"} · {booking.customer?.email || ""}
+                        </p>
+                      </div>
+                    </div>
+
+                    {booking.approvalStatus === "approved" ? (
+                      <span className="text-xs font-semibold px-3 py-1.5 rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Approved
                       </span>
-                    </td>
+                    ) : booking.approvalStatus === "rejected" ? (
+                      <span className="text-xs font-semibold px-3 py-1.5 rounded-lg border bg-red-500/10 text-red-400 border-red-500/20 flex items-center gap-1">
+                        <XCircle className="w-3.5 h-3.5" /> Rejected
+                      </span>
+                    ) : (
+                      <span className="text-xs font-semibold px-3 py-1.5 rounded-lg border bg-amber-500/10 text-amber-400 border-amber-500/20 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" /> Awaiting Review
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-3 bg-zinc-950 rounded-xl p-4 border border-zinc-800/50 text-xs">
+                    <div>
+                      <p className="text-zinc-500 mb-1">Pickup</p>
+                      <p className="font-semibold text-zinc-200">{formatDate(booking.pickupDate)}</p>
+                    </div>
+                    <div>
+                      <p className="text-zinc-500 mb-1">Return</p>
+                      <p className="font-semibold text-zinc-200">{formatDate(booking.returnDate)}</p>
+                    </div>
+                    <div>
+                      <p className="text-zinc-500 mb-1">Quantity</p>
+                      <p className="font-semibold text-zinc-200">{booking.quantity} Qty</p>
+                    </div>
                     
-                    {/* Amount */}
-                    <td className="p-4 text-sm font-semibold text-blue-400">
-                      Rs. {req.totalAmount}
-                    </td>
-                    
-                    {/* Action Buttons */}
-                    <td className="p-4 text-sm text-right">
-                      <div className="flex items-center justify-end gap-3">
+                    <div className="border-t border-zinc-800/50 pt-2 md:pt-0 md:border-t-0 md:border-l border-zinc-800/80 md:pl-3">
+                      <p className="text-zinc-500 mb-1">Rent Amount</p>
+                      <p className="font-semibold text-zinc-300">₹{rentAmount}</p>
+                    </div>
+                    <div>
+                      <p className="text-zinc-500 mb-1">Security Deposit</p>
+                      <p className="font-semibold text-emerald-400">₹{booking.securityDeposit || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-zinc-500 mb-1 font-bold text-zinc-400">Total Amount</p>
+                      <p className="font-extrabold text-blue-400 text-sm">₹{booking.totalAmount}</p>
+                    </div>
+                  </div>
+
+                  {(booking.approvalStatus === "pending_admin_review" || !booking.approvalStatus) ? (
+                    rejectingId === booking._id ? (
+                      <div className="space-y-3">
+                        <textarea
+                          value={rejectReason}
+                          onChange={(e) => setRejectReason(e.target.value)}
+                          placeholder="Reason for rejection"
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-red-500"
+                          rows={2}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleRejectSubmit(booking._id)}
+                            disabled={isActing}
+                            className="bg-red-600 hover:bg-red-500 text-white text-sm font-bold px-5 py-2 rounded-xl disabled:opacity-50 cursor-pointer"
+                          >
+                            Confirm Rejection
+                          </button>
+                          <button
+                            onClick={() => {
+                              setRejectingId(null);
+                              setRejectReason("");
+                            }}
+                            className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-semibold px-5 py-2 rounded-xl cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
                         <button
-                          onClick={() => handleApprove(req._id)}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs px-3 py-1.5 rounded-lg transition duration-150 shadow-md shadow-emerald-950/20"
+                          onClick={() => handleApprove(booking._id)}
+                          disabled={isActing}
+                          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold px-5 py-2 rounded-xl disabled:opacity-50 cursor-pointer"
                         >
+                          {isActing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                           Approve
                         </button>
                         <button
-                          onClick={() => handleReject(req._id)}
-                          className="bg-zinc-800 hover:bg-red-900/40 border border-zinc-700 hover:border-red-800 text-zinc-300 hover:text-red-400 font-medium text-xs px-3 py-1.5 rounded-lg transition duration-150"
+                          onClick={() => setRejectingId(booking._id)}
+                          disabled={isActing}
+                          className="flex items-center gap-2 bg-transparent border border-red-500/30 hover:bg-red-500/10 text-red-400 text-sm font-semibold px-5 py-2 rounded-xl disabled:opacity-50 cursor-pointer"
                         >
+                          <XCircle className="w-4 h-4" />
                           Reject
                         </button>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    )
+                  ) : (
+                    <p className="text-xs text-zinc-500 italic bg-zinc-950/40 p-2.5 rounded-xl border border-zinc-800/30 inline-block">
+                      Action performed. Archived under {booking.approvalStatus}.
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

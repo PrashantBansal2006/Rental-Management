@@ -1,11 +1,6 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
-<<<<<<< HEAD
-import CreateQuotation from './pages/CreateQuotation'
-import MyBookings from './pages/MyBookings'
-import AdminDashboard from './pages/AdminDashboard'
-=======
 import ProductDetail from './components/ProductDetail'
 import Cart from './pages/Cart'
 import Wishlist from './pages/Wishlist'
@@ -15,7 +10,9 @@ import ForgotPassword from './pages/ForgotPassword'
 import VerifyEmail from './pages/VerifyEmail'
 import ProtectedRoute from './components/ProtectedRoute'
 import GuestRoute from './components/GuestRoute'
->>>>>>> 94e865757840b5fca1b1b35dccfb5aa4d3835de1
+import CreateQuotation from './pages/CreateQuotation'
+import MyBookings from './pages/MyBookings'
+import AdminDashboard from './pages/AdminDashboard'
 
 const App = () => {
   return (
@@ -26,12 +23,6 @@ const App = () => {
         
         {/* Default /home route rendering the Home page */}
         <Route path="/home" element={<Home />} />
-<<<<<<< HEAD
-
-        <Route path="/createQuotation" element={<CreateQuotation/>}/>
-        <Route path="/mybookings" element={<MyBookings/>}/>
-        <Route path="/adminDashboard" element={<AdminDashboard/>}/>
-=======
         
         {/* Auth pages (Only accessible if NOT logged in) */}
         <Route path="/login" element={
@@ -71,7 +62,13 @@ const App = () => {
             <Wishlist />
           </ProtectedRoute>
         } />
->>>>>>> 94e865757840b5fca1b1b35dccfb5aa4d3835de1
+
+
+        <Route path="/createQuotation" element={<CreateQuotation/>}/>
+        <Route path="/mybookings" element={<MyBookings/>}/>
+        <Route path="/adminDashboard" element={<AdminDashboard/>}/>
+
+        
       </Routes>
     </BrowserRouter>
   )
