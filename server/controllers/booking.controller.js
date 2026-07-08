@@ -465,3 +465,61 @@ export const rejectBookingRequest = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getDashboardMetrics = async (req, res, next) => {
+  try {
+    // Basic counts and sums
+    const [quotationsCount, rentalsCount, revenueResult] = await Promise.all([
+      Booking.countDocuments({ stage: "quotation" }),
+      Booking.countDocuments({ stage: { $in: ["order", "completed"] } }),
+      Booking.aggregate([
+        { $match: { stage: { $in: ["order", "completed"] } } },
+        { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" } } }
+      ])
+    ]);
+
+    const revenue = revenueResult[0]?.totalRevenue || 0;
+
+    // Aggregations for Top items
+    const [topProductsRaw, topCustomersRaw, topCategoriesRaw] = await Promise.all([
+      // Top Products
+      Booking.aggregate([
+        { $match: { stage: { $in: ["order", "completed"] } } },
+        { $group: { _id: "$product", ordered: { $sum: "$quantity" }, revenue: { $sum: "$totalAmount" } } },
+        { $sort: { revenue: -1 } },
+        { $limit: 5 }
+      ]),
+      // Top Customers
+      Booking.aggregate([
+        { $match: { stage: { $in: ["order", "completed"] } } },
+        { $group: { _id: "$customer", ordered: { $sum: "$quantity" }, revenue: { $sum: "$totalAmount" } } },
+        { $sort: { revenue: -1 } },
+        { $limit: 5 }
+      ]),
+      // Top Categories (Requires joining with Product)
+      Booking.aggregate([
+        { $match: { stage: { $in: ["order", "completed"] } } },
+        { $lookup: { from: "products", localField: "product", foreignField: "_id", as: "productDetails" } },
+        { $unwind: "$productDetails" },
+        { $group: { _id: "$productDetails.category", ordered: { $sum: "$quantity" }, revenue: { $sum: "$totalAmount" } } },
+        { $sort: { revenue: -1 } },
+        { $limit: 5 }
+      ])
+    ]);
+
+    // Populate references
+    const topProducts = await Product.populate(topProductsRaw, { path: "_id", select: "name" });
+    const topCustomers = await mongoose.model("User").populate(topCustomersRaw, { path: "_id", select: "name email" });
+
+    return res.status(200).json(new ApiResponse(200, {
+      quotations: quotationsCount,
+      rentals: rentalsCount,
+      revenue,
+      topProducts: topProducts.map(p => ({ product: p._id?.name || 'Unknown', ordered: p.ordered, revenue: p.revenue })),
+      topCustomers: topCustomers.map(c => ({ customer: c._id?.name || 'Unknown', ordered: c.ordered, revenue: c.revenue })),
+      topCategories: topCategoriesRaw.map(c => ({ category: c._id || 'Unknown', ordered: c.ordered, revenue: c.revenue }))
+    }, "Dashboard metrics fetched successfully"));
+  } catch (error) {
+    next(error);
+  }
+};

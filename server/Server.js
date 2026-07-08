@@ -32,11 +32,13 @@ import authRoutes from "./routes/authRoutes.js";
 import bookingRoutes from "./routes/booking.route.js";
 import productRoutes from "./routes/product.route.js";
 import userRoutes from "./routes/user.route.js";
+import categoryRoutes from "./routes/category.route.js";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/categories", categoryRoutes);
 
 // Basic test route
 app.get("/", (req, res) => {
