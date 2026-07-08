@@ -11,6 +11,7 @@ import {
   getPendingApprovals,
   approveBookingRequest,
   rejectBookingRequest,
+  getAllBookingsForAdmin,
   getDashboardMetrics,
 } from "../controllers/booking.controller.js";
 
@@ -44,6 +45,8 @@ router.patch(
   authorizeRoles("staff"),
   approveBookingRequest
 );
+
+router.get("/admin/all-bookings", authorizeRoles("staff"), getAllBookingsForAdmin);
 
 router.patch(
   "/admin/:id/reject",

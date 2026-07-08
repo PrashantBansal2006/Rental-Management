@@ -19,6 +19,7 @@ app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json()); // Parses incoming JSON requests
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(express.static("public"));
 
 const PORT = process.env.PORT || 5000;
 
