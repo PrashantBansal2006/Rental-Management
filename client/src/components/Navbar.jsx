@@ -27,7 +27,7 @@ const Navbar = ({ cartCount = 0, wishlistCount = 0 }) => {
         <nav className="hidden md:flex items-center gap-8">
           <NavLink to="/home" className={navLinkClass}>Home</NavLink>
           <NavLink to="/shop" className={navLinkClass}>Shop</NavLink>
-          <NavLink to="/orders" className={navLinkClass}>Orders</NavLink>
+          <NavLink to="/myBookings" className={navLinkClass}>My Bookings</NavLink>
         </nav>
 
         {/* Right Elements Group */}
@@ -107,7 +107,7 @@ const Navbar = ({ cartCount = 0, wishlistCount = 0 }) => {
         <div className="md:hidden mt-4 pt-4 border-t border-zinc-800 flex flex-col gap-4">
           <NavLink to="/home" onClick={() => setMobileMenuOpen(false)} className={navLinkClass}>Home</NavLink>
           <NavLink to="/shop" onClick={() => setMobileMenuOpen(false)} className={navLinkClass}>Shop</NavLink>
-          <NavLink to="/orders" onClick={() => setMobileMenuOpen(false)} className={navLinkClass}>Orders</NavLink>
+          <NavLink to="/myBookings" onClick={() => setMobileMenuOpen(false)} className={navLinkClass}>My Bookings</NavLink>
         </div>
       )}
     </header>
