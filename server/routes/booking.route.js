@@ -11,7 +11,8 @@ import {
   getPendingApprovals,
   approveBookingRequest,
   rejectBookingRequest,
-  getAllBookingsForAdmin
+  getAllBookingsForAdmin,
+  getDashboardMetrics,
 } from "../controllers/booking.controller.js";
 
 const router = Router();
@@ -26,6 +27,12 @@ router.patch("/:id/confirm", confirmBooking);
 router.patch("/:id/cancel", cancelBooking);
 
 router.get("/:id/contract", getContractInfo);
+
+router.get(
+  "/admin/metrics",
+  authorizeRoles("staff"),
+  getDashboardMetrics
+);
 
 router.get(
   "/admin/pending",

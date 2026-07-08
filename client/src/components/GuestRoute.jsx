@@ -18,7 +18,10 @@ const GuestRoute = ({ children }) => {
     if (!user.isVerified) {
       return <Navigate to="/verify-email" replace />;
     }
-    // If the user is already logged in and verified, redirect them to home
+    // If the user is already logged in and verified, redirect them based on their role
+    if (user.role === 'staff') {
+      return <Navigate to="/adminDashboard" replace />;
+    }
     return <Navigate to="/home" replace />;
   }
 

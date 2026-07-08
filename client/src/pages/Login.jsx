@@ -19,7 +19,12 @@ const Login = () => {
     try {
       const data = await login(email, password);
       if (data.success) {
-        navigate('/home');
+        const role = data.userData?.[3]; // Assuming role is at index 3 based on authController
+        if (role === 'staff') {
+          navigate('/adminDashboard');
+        } else {
+          navigate('/home');
+        }
       } else {
         setError(data.message || 'Login failed');
       }
