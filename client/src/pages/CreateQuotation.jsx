@@ -11,44 +11,74 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  Clock
+  Clock,
+  IndianRupee
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 
 const BACKEND_URL = "http://localhost:5000";
 
+// Refined exact breakdown calculations mechanism
 const estimateItemPricing = (pricing, days, quantity) => {
   if (!pricing) {
     return null;
   }
 
-  let ratePerUnit = 0;
-  let unitLabel = "";
-  let units = 0;
+  let durationDays = days;
+  let rentAmount = 0;
+  let breakdownRows = [];
 
-  if (days >= 30 && pricing.monthly) {
-    unitLabel = "monthly";
-    ratePerUnit = pricing.monthly;
-    units = Math.ceil(days / 30);
-  } else if (days >= 7 && pricing.weekly) {
-    unitLabel = "weekly";
-    ratePerUnit = pricing.weekly;
-    units = Math.ceil(days / 7);
-  } else if (days >= 1 && pricing.daily) {
-    unitLabel = "daily";
-    ratePerUnit = pricing.daily;
-    units = Math.ceil(days);
-  } else if (pricing.hourly) {
-    unitLabel = "hourly";
-    ratePerUnit = pricing.hourly;
-    units = days * 24;
-  } else {
-    return null;
+  if (pricing.monthly && durationDays >= 30) {
+    const fullMonths = Math.floor(durationDays / 30);
+    const cost = fullMonths * pricing.monthly * quantity;
+    rentAmount += cost;
+    durationDays %= 30;
+    breakdownRows.push({
+      label: "Monthly Component",
+      calculation: `${fullMonths} Month(s) × ₹${pricing.monthly} × ${quantity} Unit(s)`,
+      total: cost
+    });
   }
 
-  const rentAmount = ratePerUnit * units * quantity;
+  if (pricing.weekly && durationDays >= 7) {
+    const fullWeeks = Math.floor(durationDays / 7);
+    const cost = fullWeeks * pricing.weekly * quantity;
+    rentAmount += cost;
+    durationDays %= 7;
+    breakdownRows.push({
+      label: "Weekly Component",
+      calculation: `${fullWeeks} Week(s) × ₹${pricing.weekly} × ${quantity} Unit(s)`,
+      total: cost
+    });
+  }
 
-  return { unitLabel, ratePerUnit, units, rentAmount };
+  if (durationDays > 0) {
+    if (pricing.daily) {
+      const cost = durationDays * pricing.daily * quantity;
+      rentAmount += cost;
+      breakdownRows.push({
+        label: "Daily Component",
+        calculation: `${durationDays} Day(s) × ₹${pricing.daily} × ${quantity} Unit(s)`,
+        total: cost
+      });
+    } else if (pricing.hourly) {
+      const totalHours = durationDays * 24;
+      const cost = totalHours * pricing.hourly * quantity;
+      rentAmount += cost;
+      breakdownRows.push({
+        label: "Hourly Component",
+        calculation: `${totalHours} Hour(s) × ₹${pricing.hourly} × ${quantity} Unit(s)`,
+        total: cost
+      });
+    } else {
+      return null;
+    }
+  }
+
+  return { 
+    rentAmount,
+    breakdownRows 
+  };
 };
 
 export default function CreateQuotation() {
@@ -100,17 +130,15 @@ export default function CreateQuotation() {
           const pricing = item.product?.pricing || item.pricing || null;
           const quantity = Number(item.quantity) || 1;
           const estimate = estimateItemPricing(pricing, days, quantity);
-          const security = item.product?.securityDeposit ?? item.securityDeposit ?? 0;
+          const security = (item.product?.securityDeposit ?? item.securityDeposit ?? 0) * quantity;
 
           if (estimate) {
             setLivePrices((prevPrices) => ({
               ...prevPrices,
               [itemId]: {
                 days,
-                unitLabel: estimate.unitLabel,
-                ratePerUnit: estimate.ratePerUnit,
-                units: estimate.units,
                 rentAmount: estimate.rentAmount,
+                breakdownRows: estimate.breakdownRows,
                 securityDeposit: security,
                 totalAmount: estimate.rentAmount + security,
               },
@@ -238,7 +266,7 @@ export default function CreateQuotation() {
   if (checkoutItems.length === 0) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 text-center">
-        <Package className="w-12 h-12 text-zinc-600 mb-3 animate-pulse" />
+        <Package className="w-12 h-12 text-zinc-600 mb-3" />
         <p className="text-zinc-400 mb-4 font-medium px-4">No items selected for quotation checkout.</p>
         <button 
           onClick={() => navigate("/")} 
@@ -255,7 +283,6 @@ export default function CreateQuotation() {
       <Navbar/>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-10">
         
-        {/* Top Header */}
         <div className="flex items-center gap-3 mb-6 md:mb-8">
           <button 
             type="button"
@@ -281,7 +308,6 @@ export default function CreateQuotation() {
             return (
               <div key={item._id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-5 transition-all hover:border-zinc-700/60">
                 
-                {/* Product Details Header */}
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 pb-4 border-b border-zinc-800/60">
                   <div className="w-full sm:w-32 h-40 sm:h-32 shrink-0 bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden flex items-center justify-center relative group">
                     {imageUrl ? (
@@ -321,7 +347,6 @@ export default function CreateQuotation() {
                   </div>
                 </div>
 
-                {/* Date Inputs */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 mb-1.5">
@@ -354,29 +379,45 @@ export default function CreateQuotation() {
                   </div>
                 </div>
 
-                {/* Pricing Info Area */}
                 {priceInfo?.error ? (
                   <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 text-xs text-red-400 flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     {priceInfo.error}
                   </div>
                 ) : priceInfo ? (
-                  <div className="bg-zinc-950 rounded-xl p-4 text-xs space-y-2.5 border border-zinc-800/60">
+                  <div className="bg-zinc-950 rounded-xl p-4 text-xs space-y-3 border border-zinc-800/60">
                     <div className="flex justify-between items-center gap-2">
-                      <span className="text-zinc-500 flex items-center gap-1"><Clock className="w-3.5 h-3.5 shrink-0" /> Rental Duration:</span>
-                      <span className="font-semibold text-zinc-200 bg-zinc-900 px-2.5 py-0.5 border border-zinc-800 rounded-md whitespace-nowrap">{priceInfo.days} Days</span>
+                      <span className="text-zinc-500 flex items-center gap-1"><Clock className="w-3.5 h-3.5 shrink-0" /> Total Duration:</span>
+                      <span className="font-semibold text-zinc-200 bg-zinc-900 px-2.5 py-0.5 border border-zinc-800 rounded-md whitespace-nowrap">{priceInfo.days} Day(s)</span>
                     </div>
-                    <div className="flex justify-between items-center gap-2">
-                      <span className="text-zinc-500 flex items-center gap-1"><Tag className="w-3.5 h-3.5 shrink-0" /> Rate Applied:</span>
-                      <span className="font-medium text-zinc-300 text-right">
-                        ₹{priceInfo.ratePerUnit} x {priceInfo.units} ({priceInfo.unitLabel})
-                      </span>
+
+                    {/* LIVE CALCULATION SHOWCASE BLOCK */}
+                    <div className="border-t border-zinc-800/50 pt-2.5 space-y-2">
+                      <p className="text-[10px] font-bold uppercase text-zinc-500 tracking-wider flex items-center gap-1">
+                        <IndianRupee className="w-3 h-3 text-zinc-500" /> Rent Calculation Breakdown
+                      </p>
+                      {priceInfo.breakdownRows?.map((row, index) => (
+                        <div key={index} className="bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                          <div>
+                            <p className="font-semibold text-zinc-300">{row.label}</p>
+                            <p className="text-[11px] text-zinc-500 font-mono">{row.calculation}</p>
+                          </div>
+                          <span className="font-bold text-zinc-200 text-sm self-end sm:self-auto">₹{row.total}</span>
+                        </div>
+                      ))}
                     </div>
+
+                    <div className="flex justify-between items-center border-t border-zinc-800/50 pt-2.5 gap-2">
+                      <span className="text-zinc-500 flex items-center gap-1"><Tag className="w-3.5 h-3.5 shrink-0" /> Total Rental Cost:</span>
+                      <span className="font-bold text-zinc-200">₹{priceInfo.rentAmount}</span>
+                    </div>
+
                     <div className="flex justify-between items-center gap-2">
                       <span className="text-zinc-500 flex items-center gap-1"><ShieldAlert className="w-3.5 h-3.5 shrink-0" /> Security Deposit:</span>
                       <span className="font-semibold text-emerald-400">₹{priceInfo.securityDeposit}</span>
                     </div>
-                    <div className="flex justify-between items-center border-t border-zinc-800/80 pt-2.5 font-bold gap-2">
+
+                    <div className="flex justify-between items-center border-t border-zinc-800 font-bold gap-2 pt-2.5">
                       <span className="text-zinc-300 flex items-center gap-1"><Wallet className="w-3.5 h-3.5 shrink-0" /> Item Estimated Total:</span>
                       <span className="text-blue-400 text-sm">₹{priceInfo.totalAmount}</span>
                     </div>
@@ -404,7 +445,6 @@ export default function CreateQuotation() {
             );
           })}
 
-          {/* Bottom Total Segment */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-5">
             <div className="text-center sm:text-left w-full sm:w-auto">
               <p className="text-[10px] sm:text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-0.5">Grand Value Bill Payable</p>
