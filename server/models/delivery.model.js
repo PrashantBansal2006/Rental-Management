@@ -61,3 +61,5 @@ const deliverySchema = new mongoose.Schema({
 const Delivery = mongoose.model("Delivery",deliverySchema);
 
 export default Delivery
+
+

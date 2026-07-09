@@ -55,7 +55,7 @@ export const createProduct = async (req, res) => {
 export const getAllProducts = async (req, res) => {
   try {
     const { type = 'daily', min, max, search, sort } = req.query;
-    
+
     let filter = {};
     if (min !== undefined) {
       filter[`pricing.${type}`] = { $gte: Number(min) };
@@ -63,7 +63,7 @@ export const getAllProducts = async (req, res) => {
         filter[`pricing.${type}`].$lte = Number(max);
       }
     }
-    
+
     if (search) {
       filter.name = { $regex: search, $options: 'i' };
     }

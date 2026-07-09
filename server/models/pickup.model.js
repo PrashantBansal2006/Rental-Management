@@ -14,6 +14,8 @@ const pickupSchema=new mongoose.Schema({
 
     pickupTime:Date,
 
+    customerSignature:String,
+
     remarks:String
 
 },{timestamps:true});
