@@ -59,6 +59,7 @@ async function register(req, res) {
         });
     }
     catch(err){ 
+        console.error("Error in register controller", err);
         res.status(500).json({
             success: false,
             message: "Internal Server Error",
@@ -111,6 +112,7 @@ async function login(req, res) {
         }); 
     }
     catch(err){
+        console.error("Error in login controller", err);
         return res.status(500).json({
             success: false,
             message: "Internal Server Error",
@@ -133,6 +135,7 @@ async function logout(req, res) {
         });
     }
     catch(err){
+        console.error("Error in logout controller", err);
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
@@ -159,6 +162,7 @@ async function isAuthenticated(req, res) {
         })
     }
     catch(err){
+        console.error("Error in isAuthenticated controller", err);
         res.status(500).json({
             success: false,
             message: "Internal Server Error",
@@ -204,6 +208,7 @@ const sendVerifyOTP = async (req, res) => {
         });
     }
     catch(err){
+        console.error("Error in sendVerifyOTP controller", err);
         res.status(500).json({
             success: false,
             message: "Internal Server Error",
@@ -254,6 +259,7 @@ const verifyEmail = async (req, res) => {
         });
     }
     catch(err){
+        console.error("Error in verifyEmail controller", err);
         res.status(500).json({
             success: false,
             message: "Internal Server Error",
@@ -299,6 +305,7 @@ async function sendResetOTP(req, res) {
         });
     }
     catch(err){
+        console.error("Error in sendResetOTP controller", err);
         res.status(500).json({
             success: false,
             message: "Internal Server Error",
@@ -348,6 +355,7 @@ async function resetPassword(req, res) {
         });
     }
     catch(err){
+        console.error("Error in resetPassword controller", err);
         res.status(500).json({
             success: false,
             message: "Internal Server Error",

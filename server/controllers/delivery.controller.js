@@ -137,7 +137,7 @@ export const getDelivery = async (req, res) => {
         });
 
     } catch (err) {
-
+        console.error("Error in getDelivery controller", err);
         res.status(500).json({
             success: false,
             message: err.message
@@ -200,7 +200,7 @@ export const pickupProduct = async (req, res) => {
         });
 
     } catch (err) {
-
+        console.error("Error in pickupProduct controller", err);
         res.status(500).json({
 
             success: false,
@@ -331,7 +331,7 @@ export const returnProduct = async (req, res) => {
 
     }
     catch (error) {
-
+        console.error("Error in returnProduct controller", error);
         res.status(500).json({
 
             success: false,
@@ -430,7 +430,7 @@ export const cancelReservation = async (req, res) => {
 
     }
     catch (error) {
-
+        console.error("Error in cancelReservation controller", error);
         res.status(500).json({
 
             success: false,
@@ -472,7 +472,7 @@ export const getAllDeliveries = async (req, res) => {
 
 
     } catch (error) {
-
+        console.error("Error in getAllDeliveries controller", error);
 
         res.status(500).json({
 
@@ -577,7 +577,7 @@ export const updatePickupTime = async (req, res) => {
 
     }
     catch (error) {
-
+        console.error("Error in updatePickupTime controller", error);
         res.status(500).json({
 
             success: false,
@@ -681,7 +681,7 @@ export const updateReturnTime = async (req, res) => {
 
     }
     catch (error) {
-
+        console.error("Error in updateReturnTime controller", error);
         res.status(500).json({
 
             success: false,
@@ -754,7 +754,7 @@ export const getPickupDocument = async (req, res) => {
 
     }
     catch (error) {
-
+        console.error("Error in getPickupDocument controller", error);
 
         res.status(500).json({
 
@@ -836,7 +836,7 @@ export const getReturnDocument = async (req, res) => {
 
     }
     catch (error) {
-
+        console.error("Error in getReturnDocument controller", error);
 
         res.status(500).json({
 
@@ -933,7 +933,7 @@ export const updateDeliveryStatus = async (req, res) => {
 
     }
     catch (error) {
-
+        console.error("Error in updateDeliveryStatus controller", error);
         res.status(500).json({
 
             success: false,
