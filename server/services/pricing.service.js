@@ -12,45 +12,50 @@ export const calculateRentalPrice = (product, pickupDate, returnDate, quantity) 
     throw new Error("Return date must be after pickup date");
   }
 
-  const durationDays = durationHours / 24;
+  let durationDays = Math.ceil(durationHours / 24);
+  let totalRentAmount = 0;
+  let breakdownDetails = [];
 
-  // TEMP fallback logic - [MODULE 5 owner isko proper pricelist engine se replace karega]
-  let ratePerUnit = 0;
-  let unitLabel = "";
+  const pricing = product.pricing;
 
-  if (durationDays >= 30 && product.pricing.monthly) {
-    ratePerUnit = product.pricing.monthly;
-    unitLabel = "monthly";
-  } else if (durationDays >= 7 && product.pricing.weekly) {
-    ratePerUnit = product.pricing.weekly;
-    unitLabel = "weekly";
-  } else if (durationDays >= 1 && product.pricing.daily) {
-    ratePerUnit = product.pricing.daily;
-    unitLabel = "daily";
-  } else if (product.pricing.hourly) {
-    ratePerUnit = product.pricing.hourly;
-    unitLabel = "hourly";
-  } else {
-    throw new Error("No applicable pricing found for this duration");
+  if (pricing.monthly && durationDays >= 30) {
+    const fullMonths = Math.floor(durationDays / 30);
+    totalRentAmount += fullMonths * pricing.monthly;
+    durationDays %= 30;
+    breakdownDetails.push(`${fullMonths} month(s)`);
   }
 
-  const units =
-    unitLabel === "hourly"
-      ? durationHours
-      : unitLabel === "daily"
-      ? Math.ceil(durationDays)
-      : unitLabel === "weekly"
-      ? Math.ceil(durationDays / 7)
-      : Math.ceil(durationDays / 30);
+  if (pricing.weekly && durationDays >= 7) {
+    const fullWeeks = Math.floor(durationDays / 7);
+    totalRentAmount += fullWeeks * pricing.weekly;
+    durationDays %= 7;
+    breakdownDetails.push(`${fullWeeks} week(s)`);
+  }
 
-  const totalAmount = ratePerUnit * units * quantity;
+  if (durationDays > 0) {
+    if (pricing.daily) {
+      totalRentAmount += durationDays * pricing.daily;
+      breakdownDetails.push(`${durationDays} day(s)`);
+    } else if (pricing.hourly) {
+      totalRentAmount += (durationDays * 24) * pricing.hourly;
+      breakdownDetails.push(`${durationDays * 24} hour(s)`);
+    } else {
+      throw new Error("No applicable pricing tier found for remaining duration days");
+    }
+  }
+
+  const finalRentAmount = totalRentAmount * quantity;
+  const securityDeposit = (product.securityDeposit || 0) * quantity;
+  const totalAmount = finalRentAmount + securityDeposit;
 
   return {
+    rentalAmount: finalRentAmount,
+    securityDeposit,
     totalAmount,
     breakdown: {
-      unitLabel,
-      ratePerUnit,
-      units,
+      unitLabel: breakdownDetails.join(", "),
+      ratePerUnit: 0,
+      units: 1,
       quantity,
     },
   };

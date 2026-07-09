@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   AlertTriangle,
   Wallet,
+  ExternalLink,
 } from "lucide-react";
 
 const API_BASE = "http://localhost:5000/api/bookings";
@@ -175,8 +176,11 @@ export default function MyBookings() {
               const isApproved = booking.approvalStatus === "approved";
               const isRejected = booking.approvalStatus === "rejected";
 
-              const canConfirm = booking.stage === "quotation" && isApproved;
-              const canCancel = booking.stage === "quotation" || booking.stage === "order";
+              const isCancelled = booking.stage === "cancelled" || booking.bookingStatus === "cancelled" || isRejected;
+
+              const canConfirm = booking.stage === "quotation" && isApproved && !isCancelled;
+              const canCancel = (booking.stage === "quotation" || booking.stage === "order") && !isCancelled;
+              const paymentUrl = booking.payment?.paymentGatewayUrl || `https://dummy-payment-gateway.example.com/pay/${booking._id}`;
 
               return (
                 <div key={booking._id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
@@ -198,19 +202,19 @@ export default function MyBookings() {
                         {booking.stage}
                       </span>
 
-                      {isApproved && (
+                      {isApproved && !isCancelled && (
                         <span className="text-xs font-semibold px-2.5 py-1 rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 flex items-center gap-1">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Approved By Admin
                         </span>
                       )}
-                      {isPendingAdmin && (
+                      {isPendingAdmin && !isCancelled && (
                         <span className="text-xs font-semibold px-2.5 py-1 rounded-lg border bg-amber-500/10 text-amber-400 border-amber-500/20 flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" /> Pending Admin Review
                         </span>
                       )}
-                      {isRejected && (
+                      {isCancelled && (
                         <span className="text-xs font-semibold px-2.5 py-1 rounded-lg border bg-red-500/10 text-red-400 border-red-500/20 flex items-center gap-1">
-                          <XCircle className="w-3.5 h-3.5" /> Rejected
+                          <XCircle className="w-3.5 h-3.5" /> {isRejected ? "Rejected" : "Cancelled"}
                         </span>
                       )}
                     </div>
@@ -258,15 +262,34 @@ export default function MyBookings() {
                     </div>
                   </div>
 
+                  {isApproved && booking.bookingStatus !== "confirmed" && !isCancelled && (
+                    <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4 space-y-2">
+                      <p className="text-xs text-zinc-400">
+                        Admin has approved your quotation request! Please proceed to the payment gateway to finalize your deposit and book your order slot.
+                      </p>
+                      <a
+                        href={paymentUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-4 rounded-xl transition-all cursor-pointer"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        Proceed to Payment Gateway
+                      </a>
+                    </div>
+                  )}
+
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between border-t border-zinc-800/80 pt-4 gap-3">
                     <div className="text-xs text-zinc-500">
                       <span>Rental Fee: ₹{rentAmount}</span>
                       <span className="mx-2">·</span>
-                      <span>Status: <span className="text-zinc-400 font-semibold">{booking.bookingStatus}</span></span>
+                      <span>Payment Status: <span className="text-blue-400 font-bold">{booking.payment?.status || "unpaid"}</span></span>
+                      <span className="mx-2">·</span>
+                      <span>Booking Status: <span className="text-zinc-400 font-semibold">{booking.bookingStatus}</span></span>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {booking.contract?.isGenerated && booking.contract?.documentUrl && (
+                      {booking.contract?.isGenerated && booking.contract?.documentUrl && !isCancelled && (
                         <a
                           href={`${BACKEND_URL}${booking.contract.documentUrl}`}
                           target="_blank"
