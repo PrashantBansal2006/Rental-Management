@@ -26,7 +26,7 @@ export const createProduct = async (req, res) => {
       name,
       description,
       category,
-      owner: req.user?._id, // Assuming auth middleware attaches user to req
+      owner: req.userId, // Assigned by userAuth middleware
       images: images || [],
       quantity: quantity || 0,
       availableQuantity: availableQuantity ?? quantity ?? 0,
@@ -114,6 +114,23 @@ export const getProductById = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "An error occurred while fetching the product",
+      error: error.message
+    });
+  }
+};
+
+export const getMyProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ owner: req.userId }).populate("category").sort({ createdAt: -1 });
+    res.status(200).json({
+      success: true,
+      products
+    });
+  } catch (error) {
+    console.error("Error fetching my products:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching products",
       error: error.message
     });
   }

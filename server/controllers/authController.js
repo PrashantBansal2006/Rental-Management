@@ -44,7 +44,7 @@ async function register(req, res) {
 
         // Email verification will be handled separately via sendVerifyOTP
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             message: "User registered successfully",
             UserData :[
@@ -145,9 +145,20 @@ async function logout(req, res) {
 
 async function isAuthenticated(req, res) {
     try{
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
         return res.status(200).json({
             success : true,
-            message : "User is Authenticated"
+            message : "User is Authenticated",
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                isVerified: user.isAccountVerified
+            }
         })
     }
     catch(err){
@@ -191,7 +202,7 @@ const sendVerifyOTP = async (req, res) => {
         };
         // Send the email (implement your email sending logic here)
         await transporter.sendMail(mailOptions);
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: "Verification OTP sent successfully on Email"
         });
@@ -242,7 +253,7 @@ const verifyEmail = async (req, res) => {
         user.verifyOtp = '';
         user.verifyOtpExpireAt = 0;
         await user.save();
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: "Email verified successfully"
         });

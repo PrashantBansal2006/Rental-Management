@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { Trash2, ShoppingCart, Loader2, Package } from 'lucide-react';
 import './Cart.css';
@@ -7,6 +7,7 @@ import './Cart.css';
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const fetchCart = async () => {
     try {
@@ -47,6 +48,11 @@ const Cart = () => {
     return cartItems.reduce((total, item) => total + item.totalPrice, 0);
   };
 
+  const handleProceedToCheckout = () => {
+    localStorage.setItem("checkoutItems", JSON.stringify(cartItems));
+    navigate("/createQuotation");
+  };
+
   return (
     <div className="cart-container">
       <Navbar />
@@ -64,7 +70,7 @@ const Cart = () => {
             <ShoppingCart className="cart-empty-icon" />
             <h2>Your cart is empty</h2>
             <p>Looks like you haven't added anything to your cart yet.</p>
-            <Link to="/home" className="cart-btn-primary">Start Browsing</Link>
+            <Link to="/" className="cart-btn-primary">Start Browsing</Link>
           </div>
         ) : (
           <div className="cart-content">
@@ -123,7 +129,7 @@ const Cart = () => {
                 <span className="summary-value">₹{calculateGrandTotal()}</span>
               </div>
               
-              <button className="cart-btn-checkout">Proceed to Checkout</button>
+              <button onClick={handleProceedToCheckout} className="cart-btn-checkout">Proceed to Checkout</button>
             </div>
           </div>
         )}
