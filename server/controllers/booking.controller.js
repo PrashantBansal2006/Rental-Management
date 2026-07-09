@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Booking } from "../models/booking.model.js";
-import Product from "../models/product.model.js";
+import Product from "../models/productModel.js";
 import { Rental } from "../models/rental.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";

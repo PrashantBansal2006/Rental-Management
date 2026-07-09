@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyJWT } from "../Middleware/authMiddleware.js";
+import { userAuth } from "../Middleware/authMiddleware.js";
 import { authorizeRoles } from "../Middleware/roleMiddleware.js";
 import {
   createQuotation,
@@ -15,7 +15,7 @@ import {
 
 const router = Router();
 
-router.use(verifyJWT);
+router.use(userAuth);
 
 router.post("/quotation", createQuotation);
 router.get("/myBookings", getMyBookings);

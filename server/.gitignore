@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-node_modules/
-.env
-.env.*
-!.env.example
-=======
 # Dependencies
 node_modules/
 .env
@@ -51,4 +45,3 @@ pnpm-lock.yaml
 
 # Misc
 *.local
->>>>>>> abfaf9905c454847dc42a5f2d9d46fae3aeeaaad
