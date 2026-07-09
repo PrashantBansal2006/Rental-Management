@@ -23,8 +23,9 @@ const registerValidator = [
         .isLength({ min: 3 })
         .withMessage("Name must be at least 3 characters"),
 
-    body("email")
+        body("email")
         .trim()
+        .toLowerCase()
         .notEmpty()
         .withMessage("Email is required")
         .isEmail()

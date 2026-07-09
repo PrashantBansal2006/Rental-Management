@@ -2,9 +2,19 @@ import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
 
+const formatDate = (value) => {
+  if (!value) return "N/A";
+  const date = new Date(value);
+  return isNaN(date.getTime()) ? "N/A" : date.toLocaleString();
+};
+
 export const generateContractPDF = (booking) => {
   return new Promise((resolve, reject) => {
     try {
+      if (!booking) {
+        return reject(new Error("Booking details are missing"));
+      }
+
       const contractsDir = path.join(process.cwd(), "public", "contracts");
 
       if (!fs.existsSync(contractsDir)) {
@@ -19,20 +29,17 @@ export const generateContractPDF = (booking) => {
 
       doc.pipe(writeStream);
 
-      // ---- Header ----
       doc
         .fontSize(20)
         .text("RENTAL AGREEMENT / CONTRACT", { align: "center" })
         .moveDown(1.5);
 
-      // ---- Booking Reference ----
       doc
         .fontSize(11)
-        .text(`Contract ID: ${booking._id}`)
+        .text(`Contract ID: ${booking._id || "N/A"}`)
         .text(`Generated On: ${new Date().toLocaleString()}`)
         .moveDown();
 
-      // ---- Customer Details ----
       doc.fontSize(14).text("Customer Details", { underline: true });
       doc
         .fontSize(11)
@@ -40,25 +47,22 @@ export const generateContractPDF = (booking) => {
         .text(`Email: ${booking.customer?.email || "N/A"}`)
         .moveDown();
 
-      // ---- Product / Rental Details ----
       doc.fontSize(14).text("Rental Details", { underline: true });
       doc
         .fontSize(11)
         .text(`Product: ${booking.product?.name || "N/A"}`)
-        .text(`Quantity: ${booking.quantity}`)
-        .text(`Pickup Date: ${new Date(booking.pickupDate).toLocaleString()}`)
-        .text(`Return Date: ${new Date(booking.returnDate).toLocaleString()}`)
+        .text(`Quantity: ${booking.quantity || 1}`)
+        .text(`Pickup Date: ${formatDate(booking.pickupDate)}`)
+        .text(`Return Date: ${formatDate(booking.returnDate)}`)
         .moveDown();
 
-      // ---- Payment Details ----
       doc.fontSize(14).text("Payment Details", { underline: true });
       doc
         .fontSize(11)
-        .text(`Total Amount: Rs. ${booking.totalAmount}`)
+        .text(`Total Amount: Rs. ${booking.totalAmount || 0}`)
         .text(`Security Deposit: Rs. ${booking.securityDeposit || 0}`)
         .moveDown();
 
-      // ---- Terms ----
       doc.fontSize(14).text("Terms & Conditions", { underline: true });
       doc
         .fontSize(10)
@@ -69,15 +73,16 @@ export const generateContractPDF = (booking) => {
             "4. Cancellations are subject to the platform's cancellation policy."
         );
 
-      doc.end();
-
       writeStream.on("finish", () => {
-        // Yeh URL frontend/customer portal ko diya jayega download ke liye
         const documentUrl = `/contracts/${fileName}`;
         resolve(documentUrl);
       });
 
-      writeStream.on("error", (err) => reject(err));
+      writeStream.on("error", (err) => {
+        reject(err);
+      });
+
+      doc.end();
     } catch (error) {
       reject(error);
     }

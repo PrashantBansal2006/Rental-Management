@@ -1,5 +1,6 @@
-import dns from "dns";
-dns.setServers(["[8.8.8.8]", "1.1.1.1"]);
+import  dns from 'dns';
+dns.setServers(['8.8.8.8', '1.1.1.1']);
+
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -18,15 +19,13 @@ app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json()); // Parses incoming JSON requests
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(express.static("public"));
 
 const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
 connectDB();
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
 
 // Routes
 // Note: We are importing routes after DB connection starts, but they are defined.
@@ -34,11 +33,13 @@ import authRoutes from "./routes/authRoutes.js";
 import bookingRoutes from "./routes/booking.route.js";
 import productRoutes from "./routes/product.route.js";
 import userRoutes from "./routes/user.route.js";
+import categoryRoutes from "./routes/category.route.js";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/categories", categoryRoutes);
 
 // Basic test route
 app.get("/", (req, res) => {
@@ -48,3 +49,8 @@ app.get("/", (req, res) => {
 // Error Handling Middlewares
 app.use(notFound);
 app.use(errorHandler);
+
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});

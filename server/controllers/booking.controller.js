@@ -2,10 +2,11 @@ import mongoose from "mongoose";
 import { Booking } from "../models/booking.model.js";
 import Product from "../models/productModel.js";
 import { Rental } from "../models/rental.model.js";
+import User from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { calculateRentalPrice } from "../services/pricing.service.js"; // [MODULE 5]
-import { initiatePayment } from "../services/payment.service.js"; // [MODULE 6]
+import { calculateRentalPrice } from "../services/pricing.service.js";
+import { initiatePayment } from "../services/payment.service.js";
 import { generateContractPDF } from "../services/contract.service.js";
 
 export const createQuotation = async (req, res, next) => {
@@ -32,51 +33,34 @@ export const createQuotation = async (req, res, next) => {
     }
 
     const product = await Product.findById(productId);
-
     if (!product) {
       throw new ApiError(404, "Product not found");
     }
 
-    if (product.status !== "available") {
-      throw new ApiError(400, "Product is currently not available for rent");
-    }
-
     if (product.availableQuantity < quantity) {
-      throw new ApiError(
-        400,
-        `Only ${product.availableQuantity} unit(s) available for this product`
-      );
+      throw new ApiError(400, "Requested quantity not available");
     }
 
-    const { totalAmount, breakdown } = calculateRentalPrice(
-      product,
-      pickupDate,
-      returnDate,
-      quantity
-    );
+    const { rentalAmount, securityDeposit, totalAmount } =
+      calculateRentalPrice(product, pickupDate, returnDate, quantity);
 
-    const quotation = await Booking.create({
-      customer: req.user._id,
-      product: product._id,
+    const booking = await Booking.create({
+      customer: req.userId,
+      product: productId,
       pickupDate,
       returnDate,
       quantity,
+      rentalAmount,
+      securityDeposit,
       totalAmount,
-      securityDeposit: product.securityDeposit || 0,
+      approvalStatus: "pending_admin_review",
       bookingStatus: "pending",
       stage: "quotation",
     });
 
-    // TODO [MODULE 7 - Notifications owner]: Yahan admin ko notify karo
-    // ki ek nayi booking request review ke liye aayi hai.
-
-    return res.status(201).json(
-      new ApiResponse(
-        201,
-        { quotation, priceBreakdown: breakdown },
-        "Booking request sent successfully. Waiting for admin approval."
-      )
-    );
+    return res
+      .status(201)
+      .json(new ApiResponse(201, booking, "Quotation created successfully"));
   } catch (error) {
     next(error);
   }
@@ -84,14 +68,15 @@ export const createQuotation = async (req, res, next) => {
 
 export const getMyBookings = async (req, res, next) => {
   try {
-    const filter = { customer: req.user._id };
+    const { stage } = req.query;
+    const filter = { customer: req.userId };
 
-    if (req.query.stage) {
-      filter.stage = req.query.stage;
+    if (stage) {
+      filter.stage = stage;
     }
 
     const bookings = await Booking.find(filter)
-      .populate("product", "name images pricing")
+      .populate("product")
       .sort({ createdAt: -1 });
 
     return res
@@ -110,63 +95,19 @@ export const getBookingById = async (req, res, next) => {
       throw new ApiError(400, "Invalid booking id");
     }
 
-    const booking = await Booking.findById(id)
-      .populate("customer", "name email")
-      .populate("product", "name images pricing securityDeposit");
+    const booking = await Booking.findById(id).populate("product");
 
     if (!booking) {
       throw new ApiError(404, "Booking not found");
     }
 
-    if (
-      req.user.role === "customer" &&
-      booking.customer._id.toString() !== req.user._id.toString()
-    ) {
-      throw new ApiError(403, "You are not allowed to view this booking");
+    if (booking.customer.toString() !== req.userId.toString()) {
+      throw new ApiError(403, "You are not authorized to view this booking");
     }
 
-    if (booking.approvalStatus === "pending_admin_review") {
-      return res.status(200).json(
-        new ApiResponse(
-          200,
-          {
-            _id: booking._id,
-            approvalStatus: booking.approvalStatus,
-            product: booking.product?.name,
-            pickupDate: booking.pickupDate,
-            returnDate: booking.returnDate,
-          },
-          "Your request is awaiting admin approval"
-        )
-      );
-    }
-
-    if (booking.approvalStatus === "rejected") {
-      return res.status(200).json(
-        new ApiResponse(
-          200,
-          {
-            _id: booking._id,
-            approvalStatus: booking.approvalStatus,
-            rejectionReason: booking.adminReview?.rejectionReason || null,
-          },
-          "Your booking request was rejected by admin"
-        )
-      );
-    }
-
-    let rentalInfo = null;
-    if (booking.stage === "order" || booking.stage === "completed") {
-      rentalInfo = await Rental.findOne({ booking: booking._id });
-    }
-
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        { booking, rental: rentalInfo },
-        "Booking fetched successfully"
-      )
-    );
+    return res
+      .status(200)
+      .json(new ApiResponse(200, booking, "Booking fetched successfully"));
   } catch (error) {
     next(error);
   }
@@ -174,10 +115,8 @@ export const getBookingById = async (req, res, next) => {
 
 export const confirmBooking = async (req, res, next) => {
   const session = await mongoose.startSession();
-
   try {
     session.startTransaction();
-
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -185,12 +124,11 @@ export const confirmBooking = async (req, res, next) => {
     }
 
     const booking = await Booking.findById(id).session(session);
-
     if (!booking) {
       throw new ApiError(404, "Booking not found");
     }
 
-    if (booking.customer.toString() !== req.user._id.toString()) {
+    if (booking.customer.toString() !== req.userId.toString()) {
       throw new ApiError(403, "You are not allowed to confirm this booking");
     }
 
@@ -215,24 +153,15 @@ export const confirmBooking = async (req, res, next) => {
       );
     }
 
-    const product = await Product.findById(booking.product).session(session);
-
-    if (!product) {
-      throw new ApiError(404, "Product no longer exists");
-    }
-
-    if (product.availableQuantity < booking.quantity) {
-      throw new ApiError(
-        400,
-        "Product is no longer available in the requested quantity"
-      );
-    }
-
-    product.availableQuantity -= booking.quantity;
-    await product.save({ session });
+    const paymentInfo = await initiatePayment(booking);
 
     booking.bookingStatus = "confirmed";
     booking.stage = "order";
+    booking.payment = {
+      status: "paid",
+      transactionId: paymentInfo.providerOrderId,
+      paymentGatewayUrl: paymentInfo.paymentUrl
+    };
     await booking.save({ session });
 
     await session.commitTransaction();
@@ -244,18 +173,16 @@ export const confirmBooking = async (req, res, next) => {
 
     const documentUrl = await generateContractPDF(populatedBooking);
 
-    booking.contract.isGenerated = true;
-    booking.contract.documentUrl = documentUrl;
-    booking.contract.generatedAt = new Date();
-    await booking.save();
-
-    const paymentInfo = await initiatePayment(booking);
+    populatedBooking.contract.isGenerated = true;
+    populatedBooking.contract.documentUrl = documentUrl;
+    populatedBooking.contract.generatedAt = new Date();
+    const savedBooking = await populatedBooking.save();
 
     return res.status(200).json(
       new ApiResponse(
         200,
         {
-          booking,
+          booking: savedBooking,
           contractUrl: documentUrl,
           payment: paymentInfo,
         },
@@ -273,10 +200,8 @@ export const confirmBooking = async (req, res, next) => {
 
 export const cancelBooking = async (req, res, next) => {
   const session = await mongoose.startSession();
-
   try {
     session.startTransaction();
-
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -284,26 +209,23 @@ export const cancelBooking = async (req, res, next) => {
     }
 
     const booking = await Booking.findById(id).session(session);
-
     if (!booking) {
       throw new ApiError(404, "Booking not found");
     }
 
-    if (booking.customer.toString() !== req.user._id.toString()) {
-      throw new ApiError(403, "You are not allowed to cancel this booking");
+    if (booking.customer.toString() !== req.userId.toString()) {
+      throw new ApiError(403, "You are not authorized to cancel this booking");
     }
 
-    if (booking.stage === "cancelled" || booking.stage === "completed") {
+    if (booking.stage === "completed" || booking.stage === "cancelled" || booking.bookingStatus === "cancelled") {
       throw new ApiError(
         400,
-        `Booking is already in "${booking.stage}" stage, cannot cancel`
+        `Booking cannot be cancelled from stage: ${booking.stage}`
       );
     }
 
-    if (booking.stage === "order") {
-      const product = await Product.findById(booking.product).session(
-        session
-      );
+    if (booking.approvalStatus === "approved") {
+      const product = await Product.findById(booking.product).session(session);
       if (product) {
         product.availableQuantity += booking.quantity;
         await product.save({ session });
@@ -312,6 +234,10 @@ export const cancelBooking = async (req, res, next) => {
 
     booking.bookingStatus = "cancelled";
     booking.stage = "cancelled";
+    if (booking.approvalStatus === "pending_admin_review") {
+      booking.approvalStatus = "rejected";
+      booking.adminReview.rejectionReason = "Cancelled by customer";
+    }
     await booking.save({ session });
 
     await session.commitTransaction();
@@ -337,47 +263,35 @@ export const getContractInfo = async (req, res, next) => {
       throw new ApiError(400, "Invalid booking id");
     }
 
-    const booking = await Booking.findById(id);
-
+    const booking = await Booking.findById(id).select("contract customer");
     if (!booking) {
       throw new ApiError(404, "Booking not found");
     }
 
-    if (booking.customer.toString() !== req.user._id.toString()) {
-      throw new ApiError(403, "You are not allowed to view this contract");
-    }
-
-    if (!booking.contract.isGenerated) {
+    if (booking.customer.toString() !== req.userId.toString()) {
       throw new ApiError(
-        400,
-        "Contract has not been generated yet for this booking"
+        403,
+        "You are not authorized to view this contract info"
       );
     }
 
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        {
-          documentUrl: booking.contract.documentUrl,
-          generatedAt: booking.contract.generatedAt,
-        },
-        "Contract fetched successfully"
-      )
-    );
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, booking.contract, "Contract fetched successfully")
+      );
   } catch (error) {
     next(error);
   }
 };
 
-//END USER CONTROLLERS
 export const getPendingApprovals = async (req, res, next) => {
   try {
     const pendingBookings = await Booking.find({
       approvalStatus: "pending_admin_review",
     })
-      .populate("customer", "name email")
-      .populate("product", "name")
-      .sort({ createdAt: 1 });
+      .populate("product")
+      .populate("customer", "name email");
 
     return res
       .status(200)
@@ -385,7 +299,7 @@ export const getPendingApprovals = async (req, res, next) => {
         new ApiResponse(
           200,
           pendingBookings,
-          "Pending booking requests fetched successfully"
+          "Pending approvals fetched successfully"
         )
       );
   } catch (error) {
@@ -393,15 +307,33 @@ export const getPendingApprovals = async (req, res, next) => {
   }
 };
 
-export const approveBookingRequest = async (req, res, next) => {
+export const getAllBookingsForAdmin = async (req, res, next) => {
   try {
+    const bookings = await Booking.find()
+      .populate("product")
+      .populate("customer", "name email");
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, bookings, "All bookings fetched successfully")
+      );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const approveBookingRequest = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new ApiError(400, "Invalid booking id");
     }
 
-    const booking = await Booking.findById(id);
+    const booking = await Booking.findById(id).session(session);
 
     if (!booking) {
       throw new ApiError(404, "Booking not found");
@@ -414,21 +346,61 @@ export const approveBookingRequest = async (req, res, next) => {
       );
     }
 
+    const product = await Product.findById(booking.product).session(session);
+    if (!product) {
+      throw new ApiError(404, "Product not found");
+    }
+
+    if (product.availableQuantity < booking.quantity) {
+      throw new ApiError(
+        400,
+        "Sufficient product quantity not available in stock to approve"
+      );
+    }
+
+    product.availableQuantity -= booking.quantity;
+    await product.save({ session });
+
+    const populatedBooking = await Booking.findById(booking._id)
+      .populate("customer", "name email")
+      .populate("product")
+      .session(session);
+
+    const pdfUrl = await generateContractPDF(populatedBooking);
+
     booking.approvalStatus = "approved";
-    booking.adminReview.reviewedBy = req.user._id;
+    booking.contract.isGenerated = true;
+    booking.contract.documentUrl = pdfUrl;
+    booking.contract.generatedAt = new Date();
+    booking.adminReview.reviewedBy = req.userId;
     booking.adminReview.reviewedAt = new Date();
-    await booking.save();
+    await booking.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
 
     return res
       .status(200)
-      .json(new ApiResponse(200, booking, "Booking request approved"));
+      .json(
+        new ApiResponse(
+          200,
+          booking,
+          "Booking request approved and stock deducted"
+        )
+      );
   } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    session.endSession();
     next(error);
   }
 };
 
 export const rejectBookingRequest = async (req, res, next) => {
+  const session = await mongoose.startSession();
   try {
+    session.startTransaction();
     const { id } = req.params;
     const { reason } = req.body;
 
@@ -436,8 +408,7 @@ export const rejectBookingRequest = async (req, res, next) => {
       throw new ApiError(400, "Invalid booking id");
     }
 
-    const booking = await Booking.findById(id);
-
+    const booking = await Booking.findById(id).session(session);
     if (!booking) {
       throw new ApiError(404, "Booking not found");
     }
@@ -452,17 +423,75 @@ export const rejectBookingRequest = async (req, res, next) => {
     booking.approvalStatus = "rejected";
     booking.bookingStatus = "cancelled";
     booking.stage = "cancelled";
-    booking.adminReview.reviewedBy = req.user._id;
+    booking.adminReview.reviewedBy = req.userId;
     booking.adminReview.reviewedAt = new Date();
     booking.adminReview.rejectionReason = reason || "Not specified";
-    await booking.save();
+    await booking.save({ session });
 
-    // TODO [MODULE 7 - Notifications owner]: Customer ko notify karo
-    // ki unki request reject ho gayi hai (reason ke saath).
+    await session.commitTransaction();
+    session.endSession();
 
     return res
       .status(200)
-      .json(new ApiResponse(200, booking, "Booking request rejected"));
+      .json(
+        new ApiResponse(200, booking, "Booking request rejected successfully")
+      );
+  } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    session.endSession();
+    next(error);
+  }
+};
+
+export const getDashboardMetrics = async (req, res, next) => {
+  try {
+    const [quotationsCount, rentalsCount, revenueResult] = await Promise.all([
+      Booking.countDocuments({ stage: "quotation" }),
+      Booking.countDocuments({ stage: { $in: ["order", "completed"] } }),
+      Booking.aggregate([
+        { $match: { stage: { $in: ["order", "completed"] } } },
+        { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" } } }
+      ])
+    ]);
+
+    const revenue = revenueResult[0]?.totalRevenue || 0;
+
+    const [topProductsRaw, topCustomersRaw, topCategoriesRaw] = await Promise.all([
+      Booking.aggregate([
+        { $match: { stage: { $in: ["order", "completed"] } } },
+        { $group: { _id: "$product", ordered: { $sum: "$quantity" }, revenue: { $sum: "$totalAmount" } } },
+        { $sort: { revenue: -1 } },
+        { $limit: 5 }
+      ]),
+      Booking.aggregate([
+        { $match: { stage: { $in: ["order", "completed"] } } },
+        { $group: { _id: "$customer", ordered: { $sum: "$quantity" }, revenue: { $sum: "$totalAmount" } } },
+        { $sort: { revenue: -1 } },
+        { $limit: 5 }
+      ]),
+      Booking.aggregate([
+        { $match: { stage: { $in: ["order", "completed"] } } },
+        { $lookup: { from: "products", localField: "product", foreignField: "_id", as: "productDetails" } },
+        { $unwind: "$productDetails" },
+        { $group: { _id: "$productDetails.category", ordered: { $sum: "$quantity" }, revenue: { $sum: "$totalAmount" } } },
+        { $sort: { revenue: -1 } },
+        { $limit: 5 }
+      ])
+    ]);
+
+    const topProducts = await Product.populate(topProductsRaw, { path: "_id", select: "name" });
+    const topCustomers = await mongoose.model("User").populate(topCustomersRaw, { path: "_id", select: "name email" });
+
+    return res.status(200).json(new ApiResponse(200, {
+      quotations: quotationsCount,
+      rentals: rentalsCount,
+      revenue,
+      topProducts: topProducts.map(p => ({ product: p._id?.name || 'Unknown', ordered: p.ordered, revenue: p.revenue })),
+      topCustomers: topCustomers.map(c => ({ customer: c._id?.name || 'Unknown', ordered: c.ordered, revenue: c.revenue })),
+      topCategories: topCategoriesRaw.map(c => ({ category: c._id || 'Unknown', ordered: c.ordered, revenue: c.revenue }))
+    }, "Dashboard metrics fetched successfully"));
   } catch (error) {
     next(error);
   }
